@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## @ingroup components-cabin
-# Fuselage.py
+# Cabin.py
 # 
 # Created:  April 2019, M. Dethy
 
@@ -15,10 +15,10 @@ from SUAVE.Core import Data, Container, ContainerOrdered
 from SUAVE.Components import Physical_Component, Lofted_Body
 
 # ------------------------------------------------------------
-#  Fuselage
+#  Cabin
 # ------------------------------------------------------------
 
-## @ingroup components-fuselages
+## @ingroup components-cabin
 class Cabin(Lofted_Body):
     """ This is a standard cabin for a tube and wing aircraft.
     
@@ -88,7 +88,7 @@ class Cabin(Lofted_Body):
         # For VSP
         self.vsp_data                = Data()
         self.vsp_data.xsec_surf_id   = ''    # There is only one XSecSurf in each VSP geom.
-        self.vsp_data.xsec_num       = None  # Number if XSecs in fuselage geom.
+        self.vsp_data.xsec_num       = None  # Number if XSecs in cabin geom.
         
         self.Segments           = SUAVE.Core.ContainerOrdered()
         

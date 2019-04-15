@@ -30,7 +30,7 @@ def cabin_planform(cabin):
         x_list.append(segment.percent_x_location*cabin_length)
         w_list.append(segment.width/2)
     
-    # Generates linear fits between the x,w points defining the fuselage
+    # Generates linear fits between the x,w points defining the cabin
     fit_list, x_subset_list, w_subset_list = [], [], []
     for i in range(1,len(x)):
         x_subset = [x[i-1],x[i]]
