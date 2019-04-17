@@ -1,6 +1,7 @@
 ## @defgroup Methods-Geometry-Two_Dimensional-Planform Planform
 # Geometry functions for two dimensional planforms.
 # @ingroup Methods-Geometry-Two_Dimensional
+from .cabin_planform import cabin_planform
 from .fuselage_planform import fuselage_planform
 from .horizontal_tail_planform import horizontal_tail_planform
 from .vertical_tail_planform import vertical_tail_planform
