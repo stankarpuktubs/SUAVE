@@ -48,20 +48,11 @@ def wing_compressibility_correction(state,settings,geometry):
     Mc             = state.conditions.freestream.mach_number
     AoA            = state.conditions.aerodynamics.angle_of_attack
     wings_lift     = state.conditions.aerodynamics.lift_coefficient
+    AR             = geometry.wings['main_wing'].aspect_ratio
     
-    # for 3D compressibility correction
-    # Need this but this isn't the right call; also files that call this aren't passing geometry to it (Fidelity_Zero.py, line 100)
-    span = geometry.wing.spans.projected # wrong; fix this
-    Sref = geometry.wing.areas.reference # wrong; fix this 
-    
-    # compressibility correction
+    # 3D compressibility correction
     beta = np.sqrt(1.-Mc**2.)
-    AR = span**2/Sref
-    compress_corr = (2/AR)/(beta+2/AR) #3D compressibility correction
-    
-    # 2D compressibility correction
-    compress_corr_2D = 1./(beta) #2D compressibility correction
-    
+    compress_corr = (2/AR)/(beta+2/AR)    
     
     # correct lift
     wings_lift_comp = wings_lift * compress_corr
