@@ -40,39 +40,23 @@ def compute_aircraft_center_of_gravity(vehicle, nose_load_fraction=.06):
         """  
 
         #unpack components
-        wing               = vehicle.wings['main_wing']
-
-        #compute moments from each component about the nose of the aircraft
-        # Wing
-        wing_cg                   = wing.mass_properties.center_of_gravity
-        wing_moment               = (wing.origin+wing_cg)*wing.mass_properties.mass
-
-        # Horizontal Tail
-        if 'horizontal_stabilizer' in vehicle.wings:
-                h_tail             = vehicle.wings['horizontal_stabilizer']
-                h_tail_cg                 = h_tail.mass_properties.center_of_gravity
-                h_tail_moment             = (h_tail.origin+h_tail_cg)*h_tail.mass_properties.mass
-        else:
-                h_tail_moment = 0
-        # Verical Tail
-        if 'vertical_stabilizer' in vehicle.wings:
-                v_tail             = vehicle.wings['vertical_stabilizer']  
-                v_tail_cg                 = v_tail.mass_properties.center_of_gravity
-                v_tail_moment             = (v_tail.origin+ v_tail_cg)*(v_tail.mass_properties.mass+v_tail.rudder.mass_properties.mass)
-        else:
-                v_tail_moment = 0
-
-
-        # Propulsion
-        propulsor_name                    = list(vehicle.propulsors.keys())[0]
-        propulsor                         = vehicle.propulsors[propulsor_name]        
-        propulsor_cg_base                 = propulsor.mass_properties.center_of_gravity
-        propulsor_cg                      = 0
-        for j in range(len(propulsor.origin)):
-                propulsor_cg += np.array(propulsor_cg_base) + np.array(propulsor.origin[j])
-
-        propulsor_cg = propulsor_cg/(j+1.)       
-        propulsor_moment          = propulsor_cg*propulsor.mass_properties.mass
+        wing_moments = []
+        for wing in vehicle.wings():
+                if wing.symmetry:
+                        sym = 2
+                else:
+                        sym = 1
+                wing_cg       = wing.mass_properties.center_of_gravity
+                wing_moments.append((wing.origin+wing_cg)*wing.mass_properties.mass*sym)     
+        
+        propulsor_moments = []              
+        for propulsors in vehicle.propulsors():
+                if propulsors.symmetry:
+                        sym = 2
+                else:
+                        sym = 1      
+                propulsor_cg       = propulsor.mass_properties.center_of_gravity   
+                propulsor_moments  = (propulsor.origin+propulsor_cg)*propulsor.mass_properties.mass
 
 
         # ---------------------------------------------------------------------------------
@@ -175,7 +159,6 @@ def compute_aircraft_center_of_gravity(vehicle, nose_load_fraction=.06):
         # Electric UAV Configurations without Fuselages/Landing Gear/Fuel
         # ---------------------------------------------------------------------------------
         else:   
-
                 sum_moments              = (wing_moment+h_tail_moment+v_tail_moment+ propulsor_moment)
 
                 vehicle.mass_properties.center_of_gravity      = (sum_moments)/vehicle.mass_properties.max_takeoff

@@ -18,7 +18,7 @@ from SUAVE.Methods.Geometry.Three_Dimensional.compute_chord_length_from_span_loc
 # ---------------origin-------------------------------------------------------
 
 ## @ingroup Methods-Center_of_Gravity
-def compute_component_centers_of_gravity(vehicle, compute_propulsor_origin = False):
+def compute_component_centers_of_gravity(vehicle):
     """ computes the CG of all of the vehicle components based on correlations 
     from AA241
 
@@ -38,48 +38,18 @@ def compute_component_centers_of_gravity(vehicle, compute_propulsor_origin = Fal
     N/A
     """  
     
-    wing                                                        = vehicle.wings['main_wing']
-    span_location_mac                                           = compute_span_location_from_chord_length(wing, wing.chords.mean_aerodynamic)
-    
-    #assume that 80% of the chord difference is from leading edge sweep
-    #x distance from leading edge of root chord to leading edge of aerodynamic center
-    mac_le_offset                                               = .8*np.sin(wing.sweeps.leading_edge)*span_location_mac
-    wing.mass_properties.center_of_gravity[0]                   = .3*wing.chords.mean_aerodynamic + mac_le_offset
-    
-    if 'horizontal_stabilizer' in vehicle.wings:
-        h_tail                                                  = vehicle.wings['horizontal_stabilizer']
-        chord_length_h_tail_35_percent_semi_span                = compute_chord_length_from_span_location(h_tail,.35*h_tail.spans.projected*.5)
-        h_tail_35_percent_semi_span_offset                      =.8*np.sin(h_tail.sweeps.quarter_chord)*.35*.5*h_tail.spans.projected   
-        h_tail.mass_properties.center_of_gravity[0]             = .3*chord_length_h_tail_35_percent_semi_span + \
-                                                                      h_tail_35_percent_semi_span_offset
-    else: 
-        print("no horizontal stabilizer")
-        
-    if 'vertical_stabilizer' in vehicle.wings:
-        v_tail                                                  = vehicle.wings['vertical_stabilizer']
-        chord_length_v_tail_35_percent_semi_span                = compute_chord_length_from_span_location(v_tail,.35*v_tail.spans.projected*.5)
-        v_tail_35_percent_semi_span_offset                      =.8*np.sin(v_tail.sweeps.quarter_chord)*.35*.5*v_tail.spans.projected
-        v_tail.mass_properties.center_of_gravity[0]             = .3*chord_length_v_tail_35_percent_semi_span + \
-                                                                    v_tail_35_percent_semi_span_offset
-
-    # computes the CG of propulsors. If origin not specified in vehicle set up, change compute_propulsor_origin boolean to True
-    propulsor_name                                              = list(vehicle.propulsors.keys())[0]
-    propulsor                                                   = vehicle.propulsors[propulsor_name]   
-    
-    if compute_propulsor_origin == True:
-        propulsor.origin = [[0,0,0]]
-        propulsor.origin[0][0] = wing.origin[0] + mac_le_offset/2.-(3./4.)*propulsor.engine_length
-        propulsor.origin[0][1] = 0.
-        propulsor.origin[0][2] = 0.
-        
-    propulsor.mass_properties.center_of_gravity[0]              = propulsor.engine_length*.5
- 
+    for wing in vehicle.wings():
+        chord_length_35_percent_semi_span           = compute_chord_length_from_span_location(wing,.35*wing.spans.projected*.5)
+        wing_35_percent_semi_span_offset            =.8*np.sin(wing.sweeps.quarter_chord)*.35*.5*wing.spans.projected   
+        wing.mass_properties.center_of_gravity[0]   = .3*chord_length_35_percent_semi_span + wing_35_percent_semi_span_offset
    
+    for propulsor in vehicle.propulsors():       
+        propulsor.mass_properties.center_of_gravity = propulsor.origin[:,0] + propulsor.engine_length*.5
+ 
     # ---------------------------------------------------------------------------------
     # configurations with fuselages (BWB, Tube and Wing)  
     # ---------------------------------------------------------------------------------
-    if vehicle.fuselages.keys() != []:
-        
+    if vehicle.fuselages.keys() != []:        
         fuel                                                    = vehicle.fuel        
         fuel.origin                                             = wing.origin
         fuel.mass_properties.center_of_gravity                  = wing.mass_properties.center_of_gravity  
