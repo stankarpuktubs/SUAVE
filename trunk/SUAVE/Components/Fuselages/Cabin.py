@@ -11,8 +11,8 @@
 # ----------------------------------------------------------------------
 
 import SUAVE
-from SUAVE.Core import Data, Container, ContainerOrdered, Units
 from SUAVE.Components import Physical_Component, Lofted_Body
+from SUAVE.Core import Data, Container, ContainerOrdered, Units
 
 # ------------------------------------------------------------
 #  Cabin
@@ -54,16 +54,16 @@ class Cabin(Lofted_Body):
         self.Sections           = Lofted_Body.Section.Container()
         self.Segments           = ContainerOrdered()
         
-        self.seat_pitch                 = 38.0 * Units.in
-        self.seat_width                 = 20.0 * Units.in
-        self.n_aisles                   = 1.0
-        self.aisle_width                = 20.0 * Units.in
+        self.seat_pitch                 = 38.0 * Units.inch
+        self.seat_width                 = 20.0 * Units.inch
+        self.n_aisles                   = 1
+        self.aisle_width                = 20.0 * Units.inch
         self.total_seats                = 0.0
         self.total_cargo_area           = 0.0
         self.total_seat_area            = 0.0
         
         self.Segments                   = SUAVE.Core.ContainerOrdered()
-        self.fuselage_length            = 0.0
+        self.length_scale               = 0.0
         
     def append_segment(self,segment):
         """ Adds a segment to the cabin. 
@@ -105,7 +105,7 @@ class Cabin(Lofted_Body):
         """ 
         start_segment = self.Segments[0].percent_x_location
         end_segment   = self.Segments[-1].percent_x_location
-        return (end_segment - start_segment)*self.fuselage_length
+        return (end_segment - start_segment)*self.length_scale
         
 
 class Container(Physical_Component.Container):
