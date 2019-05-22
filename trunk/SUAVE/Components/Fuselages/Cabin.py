@@ -11,7 +11,7 @@
 # ----------------------------------------------------------------------
 
 import SUAVE
-from SUAVE.Core import Data, Container, ContainerOrdered
+from SUAVE.Core import Data, Container, ContainerOrdered, Units
 from SUAVE.Components import Physical_Component, Lofted_Body
 
 # ------------------------------------------------------------
@@ -48,49 +48,22 @@ class Cabin(Lofted_Body):
         None
         """      
         
-        self.tag = 'cabin'
+        self.tag                =  'cabin'
         self.origin             = [[0.0,0.0,0.0]]
         self.aerodynamic_center = [0.0,0.0,0.0]
-        self.Sections    = Lofted_Body.Section.Container()
-        self.Segments    = ContainerOrdered()
+        self.Sections           = Lofted_Body.Section.Container()
+        self.Segments           = ContainerOrdered()
         
-        self.seats_abreast_options      = [1, 2, 3, 4]
-        self.seat_pitch                 = 38.0
-        self.seat_width                 = 20.0
-        self.aisle_width                = 20.0
+        self.seat_pitch                 = 38.0 * Units.in
+        self.seat_width                 = 20.0 * Units.in
+        self.n_aisles                   = 1.0
+        self.aisle_width                = 20.0 * Units.in
         self.total_seats                = 0.0
         self.total_cargo_area           = 0.0
         self.total_seat_area            = 0.0
-        self.sections                   = []
-
-        self.areas = Data()
-        self.areas.front_projected = 0.0
-        self.areas.side_projected  = 0.0
-        self.areas.wetted          = 0.0
         
-        self.effective_diameter = 0.0
-        self.width              = 0.0
-        
-        self.heights = Data()
-        self.heights.maximum                        = 0.0
-        self.heights.at_quarter_length              = 0.0
-        self.heights.at_three_quarters_length       = 0.0
-        self.heights.at_vertical_root_quarter_chord = 0.0
-        
-        self.lengths = Data()
-        self.lengths.total      = 0.0
-        self.lengths.fore_space = 0.0
-        self.lengths.aft_space  = 0.0
-             
-        self.differential_pressure = 0.0
-
-
-        # For VSP
-        self.vsp_data                = Data()
-        self.vsp_data.xsec_surf_id   = ''    # There is only one XSecSurf in each VSP geom.
-        self.vsp_data.xsec_num       = None  # Number if XSecs in cabin geom.
-        
-        self.Segments           = SUAVE.Core.ContainerOrdered()
+        self.Segments                   = SUAVE.Core.ContainerOrdered()
+        self.fuselage_length            = 0.0
         
     def append_segment(self,segment):
         """ Adds a segment to the cabin. 
@@ -115,6 +88,24 @@ class Cabin(Lofted_Body):
         self.Segments.append(segment)
 
         return
+        
+    def get_total_length(self):
+        """ Calculates the total cabin length based on segments. 
+    
+        Assumptions:
+        None
+        Source:
+        N/A
+        Inputs:
+        None
+        Outputs:
+        None
+        Properties Used:
+        N/A
+        """ 
+        start_segment = self.Segments[0].percent_x_location
+        end_segment   = self.Segments[-1].percent_x_location
+        return (end_segment - start_segment)*self.fuselage_length
         
 
 class Container(Physical_Component.Container):
