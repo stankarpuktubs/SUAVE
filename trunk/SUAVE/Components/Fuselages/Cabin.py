@@ -63,6 +63,8 @@ class Cabin(Lofted_Body):
         self.total_seat_area            = 0.0
         
         self.Segments                   = SUAVE.Core.ContainerOrdered()
+        self.i_start_segment            = 0
+        self.i_end_segment              = 0
         self.length_scale               = 0.0
         
     def append_segment(self,segment):
@@ -103,8 +105,9 @@ class Cabin(Lofted_Body):
         Properties Used:
         N/A
         """ 
-        start_segment = self.Segments[0].percent_x_location
-        end_segment   = self.Segments[-1].percent_x_location
+        start_segment = self.Segments[self.i_start_segment].percent_x_location
+        end_segment   = self.Segments[self.i_end_segment].percent_x_location
+        
         return (end_segment - start_segment)*self.length_scale
         
 
