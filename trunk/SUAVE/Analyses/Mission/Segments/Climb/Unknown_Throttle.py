@@ -37,7 +37,7 @@ class Unknown_Throttle(Aerodynamic):
         None
     """        
     
-    def __defaults__(self):
+    def __defaults__(self,config):
         """ This sets the default solver flow. Anything in here can be modified after initializing a segment.
     
             Assumptions:
@@ -54,7 +54,7 @@ class Unknown_Throttle(Aerodynamic):
     
             Properties Used:
             None
-        """          
+        """      
         
         # --------------------------------------------------------------
         #   User inputs
@@ -121,8 +121,15 @@ class Unknown_Throttle(Aerodynamic):
         iterate.conditions.gravity         = Methods.Common.Weights.update_gravity
         iterate.conditions.freestream      = Methods.Common.Aerodynamics.update_freestream
         iterate.conditions.orientations    = Methods.Common.Frames.update_orientations
-        iterate.conditions.propulsion      = Methods.Common.Energy.update_thrust
-        iterate.conditions.aerodynamics    = Methods.Common.Aerodynamics.update_aerodynamics
+        
+        # If pusher, start with aerodynamics then propulsion. If tractor, do reverse order.
+        if config == 'pusher':
+            iterate.conditions.aerodynamics = Methods.Common.Aerodynamics.update_aerodynamics
+            iterate.conditions.propulsion   = Methods.Common.Energy.update_thrust
+        else:
+            iterate.conditions.propulsion      = Methods.Common.Energy.update_thrust
+            iterate.conditions.aerodynamics    = Methods.Common.Aerodynamics.update_aerodynamics
+        
         iterate.conditions.stability       = Methods.Common.Aerodynamics.update_stability
         iterate.conditions.weights         = Methods.Common.Weights.update_weights
         iterate.conditions.forces          = Methods.Common.Frames.update_forces
