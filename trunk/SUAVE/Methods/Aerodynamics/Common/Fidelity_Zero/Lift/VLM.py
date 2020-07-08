@@ -10,7 +10,7 @@
 # package imports
 import SUAVE
 import numpy as np
-from SUAVE.Core import Units
+from SUAVE.Core import Units, Data
 from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.compute_induced_velocity_matrix import  compute_induced_velocity_matrix
 from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.compute_vortex_distribution     import compute_vortex_distribution
 from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.compute_RHS_matrix              import compute_RHS_matrix
@@ -199,4 +199,24 @@ def VLM(conditions,settings,geometry):
     # delete MCM from VD data structure since it consumes memory
     delattr(VD, 'MCM')   
     
-    return CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP 
+    # ---------------------------------------------------------------------------------------
+    #  Specify function outputs: 
+    # ---------------------------------------------------------------------------------------
+    VLM_outputs       = Data()
+    VLM_outputs.VD    = VD
+    VLM_outputs.MCM   = MCM
+    VLM_outputs.C_mn  = C_mn
+    VLM_outputs.gamma = gamma_3d
+    VLM_outputs.cl_y  = cl_y
+    VLM_outputs.cdi_y = cdi_y
+    VLM_outputs.CL    = CL
+    VLM_outputs.CDi   = CDi
+    VLM_outputs.CM    = CM
+    VLM_outputs.CL_wing = CL_wing
+    VLM_outputs.CDi_wing = CDi_wing
+    VLM_outputs.CP      = CP
+    
+
+    return VLM_outputs    
+    
+    #return CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP 

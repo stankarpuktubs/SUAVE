@@ -135,7 +135,7 @@ class Propeller(Energy_Component):
         a      = conditions.freestream.speed_of_sound
         T      = conditions.freestream.temperature
         theta  = self.thrust_angle
-        tc     = self.thickness_to_chord  
+        tc     = 0.12 #self.thickness_to_chord  
         sigma  = self.blade_solidity   
         BB     = B*B
         
