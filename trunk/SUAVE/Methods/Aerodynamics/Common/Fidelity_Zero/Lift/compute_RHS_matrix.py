@@ -58,8 +58,8 @@ def compute_RHS_matrix(n_sw,n_cw,delta,phi,conditions,geometry,sur_flag,slipstre
     #-------------------------------------------------------------------------------------------------------
     # PROPELLER SLIPSTREAM MODEL
     #------------------------------------------------------------------------------------------------------- 
-    if ((sur_flag == False) and ('propulsor' in propulsors)) and slipstream:
-        prop =  propulsors['propulsor'].propeller 
+    if ((sur_flag == False) and slipstream): #and ('propulsor' in propulsors)) 
+        prop =  geometry.propulsors.prop_net.propeller 
     
         # loop through propellers on aircraft to get combined effect of slipstreams
         num_prop   = len(prop.origin)
@@ -82,7 +82,7 @@ def compute_RHS_matrix(n_sw,n_cw,delta,phi,conditions,geometry,sur_flag,slipstre
     
             Vx                = np.tile(np.atleast_2d(prop.outputs.velocity[:,0]).T, (1, n_old)) # dimension of propeller distretization
             prop_dif          = np.atleast_3d(va[:,1:] +  va[:,:-1])
-            prop_dif          = np.repeat (prop_dif, VD.n_cp, axis = 2)
+            prop_dif          = np.repeat (prop_dif[:,:,0:1], VD.n_cp, axis = 2)
             VX                = np.repeat(np.atleast_3d(Vx[:,1:]), VD.n_cp, axis = 2) # dimension (num control points X propeller distribution X vortex distribution )
             Kv                = (2*VX + prop_dif) /(2*VX + Kd*prop_dif) # dimension (num control points X propeller distribution X vortex distribution )
     

@@ -67,6 +67,7 @@ class Propeller(Energy_Component):
         self.induced_power_factor     = 1.48  #accounts for interference effects
         self.profile_drag_coefficient = .03        
         self.tag                      = 'Propeller'
+        self.vehicle                  = None
    
     def spin(self,conditions,vehicle):
         """Analyzes a propeller given geometry and operating conditions.
@@ -154,9 +155,9 @@ class Propeller(Energy_Component):
             c_wing              = vehicle.wings.main_wing.chords.root
             span                = vehicle.wings.main_wing.spans.projected
         else:
-            ua_wing             = np.zeros_like(self.disturbed_u)
-            uv_wing             = np.zeros_like(self.disturbed_v)
-            ut_wing             = np.zeros_like(self.disturbed_w)         
+            ua_wing             = 0.0 #np.zeros_like(self.disturbed_u)
+            uv_wing             = 0.0 #np.zeros_like(self.disturbed_v)
+            ut_wing             = 0.0 #np.zeros_like(self.disturbed_w)         
     
         try:
             pitch_command = conditions.propulsion.pitch_command
