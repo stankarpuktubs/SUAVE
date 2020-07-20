@@ -20,7 +20,7 @@ from SUAVE.Methods.Geometry.Two_Dimensional.Cross_Section.Airfoil.import_airfoil
 #  Propeller Design
 # ----------------------------------------------------------------------
 
-def propeller_design(prop,number_of_stations=20):
+def propeller_design(prop,number_of_stations):
     """ Optimizes propeller chord and twist given input parameters.
           
           Inputs:
@@ -180,7 +180,7 @@ def propeller_design(prop,number_of_stations=20):
         #Step 10, repeat starting at step 2 with the new zeta
         diff = abs(zeta-zetan)
         
-        zeta = zetan
+        zeta = zetan[0][0]
     
     #Step 11, determine propeller efficiency etc...
     
@@ -215,8 +215,8 @@ def propeller_design(prop,number_of_stations=20):
     
     # compute max thickness distribution using NACA 4 series eqn
     t_max          = np.zeros(N)
-    for idx in range(20):
-        c_blade    = np.linspace(0,c[idx],20)          # local chord  
+    for idx in range(N):
+        c_blade    = np.linspace(0,c[idx],N)          # local chord  
         t          = (5*c_blade)*(0.2969*np.sqrt(c_blade) - 0.1260*c_blade - 0.3516*(c_blade**2) + 0.2843*(c_blade**3) - 0.1015*(c_blade**4)) # local thickness distribution
         t_max[idx] = np.max(t)                       
  
