@@ -117,10 +117,7 @@ class Combustor(Energy_Component):
         # unpack the values
 
         # unpacking the values from conditions
-        gamma  = conditions.freestream.isentropic_expansion_factor 
         Cp     = conditions.freestream.specific_heat_at_constant_pressure
-        To     = conditions.freestream.temperature
-        Tto    = conditions.freestream.stagnation_temperature
         
         # unpacking the values form inputs
         Tt_in    = self.inputs.stagnation_temperature
@@ -132,7 +129,6 @@ class Combustor(Energy_Component):
         
         # unpacking values from self
         htf    = self.fuel_data.specific_energy
-        ar     = self.area_ratio
         
         # compute pressure
         Pt_out = Pt_in*pib
@@ -143,7 +139,6 @@ class Combustor(Energy_Component):
         # method - computing the stagnation enthalpies from stagnation temperatures
         ht4     = Cp*Tt4*nondim_r
         ht_in   = Cp*Tt_in*nondim_r
-        ho      = Cp*To
         
         # Using the Turbine exit temperature, the fuel properties and freestream temperature to compute the fuel to air ratio f
         f       = (ht4 - ht_in)/(eta_b*htf-ht4)
@@ -156,6 +151,8 @@ class Combustor(Energy_Component):
         self.outputs.stagnation_pressure     = Pt_out
         self.outputs.stagnation_enthalpy     = ht_out
         self.outputs.fuel_to_air_ratio       = f 
+        
+        return self.outputs
     
     def compute_rayleigh(self,conditions):
         """ This combutes the temperature and pressure change across the

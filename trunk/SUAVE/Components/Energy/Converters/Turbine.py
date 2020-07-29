@@ -138,6 +138,8 @@ class Turbine(Energy_Component):
         self.outputs.stagnation_temperature  = Tt_out
         self.outputs.stagnation_pressure     = Pt_out
         self.outputs.stagnation_enthalpy     = ht_out
+        
+        return self.outputs
     
     
     __call__ = compute

@@ -112,7 +112,6 @@ class Fan(Energy_Component):
         
         #Compute the output stagnation quantities 
         ht_in     = Cp*Tt_in
-        
         Pt_out    = Pt_in*pid
         Tt_out    = Tt_in*pid**((gamma-1)/(gamma*etapold))
         ht_out    = Cp*Tt_out    
@@ -121,10 +120,12 @@ class Fan(Energy_Component):
         work_done = ht_out- ht_in
         
         #pack the computed quantities into outputs
-        self.outputs.stagnation_temperature  = Tt_out
-        self.outputs.stagnation_pressure     = Pt_out
-        self.outputs.stagnation_enthalpy     = ht_out
-        self.outputs.work_done               = work_done
+        self.outputs.stagnation_temperature = Tt_out
+        self.outputs.stagnation_pressure    = Pt_out
+        self.outputs.stagnation_enthalpy    = ht_out
+        self.outputs.work_done              = work_done
+        
+        return self.outputs
     
 
     __call__ = compute

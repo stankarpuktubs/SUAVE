@@ -187,6 +187,8 @@ class Expansion_Nozzle(Energy_Component):
         self.outputs.static_pressure         = P_out
         self.outputs.area_ratio              = area_ratio
         
+        return self.outputs
+        
     
 
     __call__ = compute

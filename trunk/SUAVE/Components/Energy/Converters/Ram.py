@@ -126,5 +126,7 @@ class Ram(Energy_Component):
         conditions.freestream.isentropic_expansion_factor          = gamma
         conditions.freestream.specific_heat_at_constant_pressure   = Cp
         conditions.freestream.gas_specific_constant                = R
+        
+        return self.outputs, conditions
 
     __call__ = compute

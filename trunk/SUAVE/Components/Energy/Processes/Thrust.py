@@ -208,6 +208,8 @@ class Thrust(Energy_Component):
         self.outputs.fuel_flow_rate                    = fuel_flow_rate    
         self.outputs.power                             = power  
         self.outputs.specific_impulse                  = Isp
+        
+        return self.outputs
 
     def compute_stream_thrust(self,conditions):  
         """Computes thrust and other properties as below. 
