@@ -175,7 +175,7 @@ def parasite_drag_wing(state,settings,geometry):
     
     state.conditions.aerodynamics.drag_breakdown.parasite[wing.tag] = wing_result
 
-    return wing_parasite_drag
+    return state, settings, geometry
 
 
 ## @ingroup Methods-Aerodynamics-Common-Fidelity_Zero-Drag

@@ -52,4 +52,4 @@ def compressibility_drag_wing_total(state,settings,geometry):
 
     conditions.aerodynamics.drag_breakdown.compressible.total  = total_compressibility_drag
         
-    return total_compressibility_drag
+    return state, settings, geometry

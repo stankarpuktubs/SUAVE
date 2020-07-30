@@ -56,24 +56,24 @@ class Process(ContainerOrdered):
         
         for tag,step in self.items(): 
             
-            if self.verbose:
-                print('step :' , tag)
+            #if self.verbose:
+                #print('step :' , tag)
             
             #if not callable(step): continue
             
             if hasattr(step,'evaluate'): 
-                result = step.evaluate(*args,**kwarg)
+                self = step.evaluate(*args,**kwarg)
             else:
-                result = step(*args,**kwarg)
+                self = step(*args,**kwarg)
                 
-            results[tag] = result
+            #results[tag] = result
         
         #: for each step
         
-        if self.verbose:
-            print('process end')        
+        #if self.verbose:
+            #print('process end')        
         
-        return results
+        return self
         
     def __call__(self,*args,**kwarg):
         """This is used to set the class' call behavior to the evaluate functions.

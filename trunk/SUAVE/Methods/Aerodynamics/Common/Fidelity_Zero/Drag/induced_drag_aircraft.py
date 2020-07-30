@@ -144,4 +144,4 @@ def induced_drag_aircraft(state,settings,geometry):
     conditions.aerodynamics.drag_breakdown.induced.oswald_efficiency_factor = e_osw
     conditions.aerodynamics.drag_breakdown.induced.viscous_wings_drag       = wing_viscous_induced_drags
     
-    return total_induced_drag
+    return state, settings, geometry

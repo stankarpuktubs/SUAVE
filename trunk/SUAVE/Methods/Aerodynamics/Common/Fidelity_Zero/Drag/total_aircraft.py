@@ -56,4 +56,4 @@ def total_aircraft(state,settings,geometry):
     conditions.aerodynamics.drag_breakdown.total = aircraft_total_drag
     conditions.aerodynamics.drag_coefficient     = aircraft_total_drag
 
-    return aircraft_total_drag
+    return state, settings, geometry

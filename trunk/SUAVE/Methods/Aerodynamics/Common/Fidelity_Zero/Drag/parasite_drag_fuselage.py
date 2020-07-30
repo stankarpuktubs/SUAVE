@@ -103,4 +103,4 @@ def parasite_drag_fuselage(state,settings,geometry):
     except:
         print("Drag Polar Mode fuse parasite")
     
-    return fuselage_parasite_drag
+    return state, settings, geometry

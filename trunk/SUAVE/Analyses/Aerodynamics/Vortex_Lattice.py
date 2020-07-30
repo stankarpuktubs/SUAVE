@@ -265,7 +265,7 @@ class Vortex_Lattice(Aerodynamics):
             conditions.aerodynamics.lift_breakdown.compressible_wings[wing]     = np.atleast_2d(inviscid_wing_lifts).T
             conditions.aerodynamics.drag_breakdown.induced.inviscid_wings[wing] = np.atleast_2d(inviscid_wing_drags).T
          
-        return     
+        return state, settings, geometry
     
     def evaluate_no_surrogate(self,state,settings,geometry):
         """Evaluates lift and drag directly using VLM
@@ -328,7 +328,7 @@ class Vortex_Lattice(Aerodynamics):
         # Pressure
         conditions.aerodynamics.pressure_coefficient                         = pressure_coefficient
         
-        return  
+        return state, settings, geometry
     
     
     def sample_training(self):

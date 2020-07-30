@@ -73,4 +73,4 @@ def miscellaneous_drag_aircraft_ESDU(state,settings,geometry):
         reference_area            = Sref ,
         total                     = cd_excrescence *ones_1col, )
 
-    return cd_excrescence *ones_1col
+    return state, settings, geometry

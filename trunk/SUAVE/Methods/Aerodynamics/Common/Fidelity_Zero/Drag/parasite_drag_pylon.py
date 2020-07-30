@@ -86,4 +86,4 @@ def parasite_drag_pylon(state,settings,geometry):
     )
     conditions.aerodynamics.drag_breakdown.parasite['pylon'] = pylon_result 
  
-    return pylon_parasite_drag
+    return state, settings, geometry

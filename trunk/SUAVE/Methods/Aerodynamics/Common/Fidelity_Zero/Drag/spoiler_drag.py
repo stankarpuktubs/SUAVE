@@ -44,4 +44,4 @@ def spoiler_drag(state,settings,geometry):
     # untrimmed drag
     conditions.aerodynamics.drag_breakdown.spoiler_drag = spoiler_drag
     
-    return spoiler_drag
+    return state, settings, geometry

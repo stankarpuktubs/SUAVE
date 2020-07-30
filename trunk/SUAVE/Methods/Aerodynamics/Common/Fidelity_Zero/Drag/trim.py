@@ -42,4 +42,4 @@ def trim(state,settings,geometry):
     conditions.aerodynamics.drag_breakdown.trim_corrected_drag                  = aircraft_total_drag_trim_corrected    
     conditions.aerodynamics.drag_breakdown.miscellaneous.trim_correction_factor = trim_correction_factor
 
-    return aircraft_total_drag_trim_corrected
+    return state, settings, geometry

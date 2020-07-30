@@ -91,4 +91,4 @@ def parasite_drag_propulsor(state,settings,geometry):
     )
     conditions.aerodynamics.drag_breakdown.parasite[propulsor.tag] = propulsor_result    
     
-    return propulsor_parasite_drag
+    return state, settings, geometry

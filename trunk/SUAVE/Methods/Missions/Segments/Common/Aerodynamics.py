@@ -36,6 +36,8 @@ def update_altitude(segment):
     altitude = -segment.state.conditions.frames.inertial.position_vector[:,2]
     segment.state.conditions.freestream.altitude[:,0] = altitude
     
+    return segment
+    
 
 # ----------------------------------------------------------------------
 #  Update Atmosphere
@@ -82,7 +84,7 @@ def update_atmosphere(segment):
     conditions.freestream.speed_of_sound    = atmo_data.speed_of_sound
     conditions.freestream.dynamic_viscosity = atmo_data.dynamic_viscosity
     
-    return
+    return segment
     
     
 # ----------------------------------------------------------------------
@@ -139,7 +141,7 @@ def update_freestream(segment):
     conditions.freestream.reynolds_number  = Re
     conditions.freestream.dynamic_pressure = q
 
-    return
+    return segment
 
 
 # ----------------------------------------------------------------------
@@ -182,8 +184,8 @@ def update_aerodynamics(segment):
     results = aerodynamics_model( segment.state )    
     
     # unpack results
-    CL = results.lift.total
-    CD = results.drag.total
+    CL = results[0].conditions.aerodynamics.lift_coefficient
+    CD = results[0].conditions.aerodynamics.drag_coefficient
 
     CL[q<=0.0] = 0.0
     CD[q<=0.0] = 0.0
@@ -200,14 +202,13 @@ def update_aerodynamics(segment):
     L[:,2] = ( -CL * q * Sref )[:,0]
     D[:,0] = ( -CD * q * Sref )[:,0]
 
-    results.lift_force_vector = L
-    results.drag_force_vector = D    
-
     # pack conditions
     conditions.aerodynamics.lift_coefficient = CL
     conditions.aerodynamics.drag_coefficient = CD
     conditions.frames.wind.lift_force_vector[:,:] = L[:,:] # z-axis
     conditions.frames.wind.drag_force_vector[:,:] = D[:,:] # x-axis
+    
+    return segment
 
 
 # ----------------------------------------------------------------------
@@ -242,5 +243,5 @@ def update_stability(segment):
         results = stability_model( segment.state.conditions )        
         conditions.stability.update(results)
     
-    return
+    return segment
 

@@ -102,4 +102,4 @@ def compressibility_drag_wing(state,settings,geometry):
     )
     drag_breakdown.compressible[wing.tag] = wing_results
 
-    return total_compressibility_drag
+    return state, settings, geometry

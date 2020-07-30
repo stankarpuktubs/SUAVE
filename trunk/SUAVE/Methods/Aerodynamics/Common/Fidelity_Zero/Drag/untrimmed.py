@@ -49,4 +49,4 @@ def untrimmed(state,settings,geometry):
     
     conditions.aerodynamics.drag_breakdown.untrimmed = aircraft_untrimmed
     
-    return aircraft_untrimmed
+    return state, settings, geometry
