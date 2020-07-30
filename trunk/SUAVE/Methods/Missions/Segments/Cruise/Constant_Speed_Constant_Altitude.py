@@ -56,3 +56,5 @@ def initialize_conditions(segment):
     segment.state.conditions.frames.inertial.position_vector[:,2] = -alt # z points down
     segment.state.conditions.frames.inertial.velocity_vector[:,0] = air_speed
     segment.state.conditions.frames.inertial.time[:,0]            = time[:,0]
+    
+    return segment

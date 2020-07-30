@@ -46,6 +46,8 @@ def unpack_unknowns(segment):
     segment.state.conditions.propulsion.throttle[:,0]            = throttle[:,0]
     segment.state.conditions.frames.body.inertial_rotations[:,1] = theta[:,0]   
     
+    return segment
+    
 # ----------------------------------------------------------------------
 #  Residual Total Forces
 # ----------------------------------------------------------------------
@@ -79,7 +81,7 @@ def residual_total_forces(segment):
     segment.state.residuals.forces[:,0] = FT[:,0]/m[:,0] - a[:,0]
     segment.state.residuals.forces[:,1] = FT[:,2]/m[:,0] - a[:,2]       
 
-    return
+    return segment
       
 ## @ingroup Methods-Missions-Segments-Climb 
 def update_differentials_altitude(segment):
@@ -121,4 +123,4 @@ def update_differentials_altitude(segment):
     t_initial = segment.state.conditions.frames.inertial.time[0,0]
     segment.state.conditions.frames.inertial.time[:,0] = t_initial + t[:,0]
 
-    return
+    return segment

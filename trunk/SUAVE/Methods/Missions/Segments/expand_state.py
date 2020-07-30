@@ -33,5 +33,5 @@ def expand_state(segment):
     
     segment.state.expand_rows(n_points)
     
-    return
+    return segment
     

@@ -49,7 +49,10 @@ def expand_sub_segments(segment):
         sub_segment.process.initialize.expand_state(sub_segment)
                
         if Process.verbose:
-            print('segment end :' , tag)        
+            print('segment end :' , tag)     
+            
+            
+    return segment
 
 
 # ----------------------------------------------------------------------
@@ -77,6 +80,8 @@ def update_sub_segments(segment):
         sub_segment.initialize()
         sub_segment.iterate()
         sub_segment.finalize()
+        
+    return segment
    
 # ----------------------------------------------------------------------
 #  Finalize Sub Segments
@@ -102,6 +107,8 @@ def finalize_sub_segments(segment):
 
     for tag,sub_segment in segment.segments.items():
         sub_segment.finalize()
+        
+    return segment
 
 
 # ----------------------------------------------------------------------
@@ -130,6 +137,7 @@ def sequential_sub_segments(segment):
     for tag,sub_segment in segment.segments.items():
         sub_segment.evaluate()
 
+    return segment
 
 # ----------------------------------------------------------------------
 #  Sequential Sub Segments
@@ -155,6 +163,8 @@ def merge_sub_segment_states(segment):
     """       
 
     segment.state.update(segment.merged())
+    
+    return segment
 
 # ----------------------------------------------------------------------
 #  Sequential Sub Segments
@@ -191,6 +201,6 @@ def unpack_subsegments(segment):
             sub_segment.state.unknowns[key] = segment.state.unknowns[key][counter[key]:counter[key]+ctrl_pnts]
             counter[key] = counter[key]+ctrl_pnts
             
-    return
+    return segment
             
             

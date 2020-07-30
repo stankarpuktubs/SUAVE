@@ -196,7 +196,7 @@ class Segment(Analysis):
         """          
         if state is None:
             state = self.state
-        self.process(self)
+        self.process(self) # JAX
         return self
     
     

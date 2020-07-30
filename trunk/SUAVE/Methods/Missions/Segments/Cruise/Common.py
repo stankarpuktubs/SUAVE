@@ -43,7 +43,9 @@ def unpack_unknowns(segment):
 
     # apply unknowns
     segment.state.conditions.propulsion.throttle[:,0]            = throttle[:,0]
-    segment.state.conditions.frames.body.inertial_rotations[:,1] = body_angle[:,0]   
+    segment.state.conditions.frames.body.inertial_rotations[:,1] = body_angle[:,0]
+    
+    return segment
     
 
 # ----------------------------------------------------------------------
@@ -78,7 +80,7 @@ def residual_total_forces(segment):
     # vertical
     segment.state.residuals.forces[:,1] = FT[:,2]/m
 
-    return
+    return segment
     
     
  
