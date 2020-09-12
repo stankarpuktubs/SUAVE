@@ -9,7 +9,7 @@
 #  Imports
 # ----------------------------------------------------------------------
 from SUAVE.Components.Energy.Energy_Component import Energy_Component
-from SUAVE.Core import Data
+from SUAVE.Core import Data, Units
 from SUAVE.Methods.Geometry.Two_Dimensional.Cross_Section.Airfoil.compute_airfoil_polars \
      import compute_airfoil_polars
 from SUAVE.Methods.Geometry.Three_Dimensional \
@@ -136,9 +136,11 @@ class Propeller(Energy_Component):
         a      = conditions.freestream.speed_of_sound
         T      = conditions.freestream.temperature
         theta  = self.thrust_angle
-        tc     = 0.21 #self.thickness_to_chord  
+        tc     = self.thickness_to_chord  #0.21
         sigma  = self.blade_solidity   
         BB     = B*B
+        
+        J = Vv/((omega/(2*np.pi))*2*R)
         
         # Pusher Paramters and Settings:
         case              = self.analysis_settings.case
@@ -148,16 +150,23 @@ class Propeller(Energy_Component):
         prop_loc          = self.prop_loc
         
         if case == 'disturbed_freestream':
-            ua_wing             = self.disturbed_u
-            uv_wing             = self.disturbed_v
-            ut_wing             = self.disturbed_w
+            ua_wing = self.disturbed_u
+            uv_wing = self.disturbed_v
+            uw_wing = self.disturbed_w
+            
+            VD = vehicle.VD
+            
+            #ua_wing             = self.disturbed_u
+            #uv_wing             = self.disturbed_v
+            #ut_wing             = self.disturbed_w
             # Wing parameters for boundary layer computation:
             c_wing              = vehicle.wings.main_wing.chords.root
             span                = vehicle.wings.main_wing.spans.projected
         else:
             ua_wing             = 0.0 #np.zeros_like(self.disturbed_u)
             uv_wing             = 0.0 #np.zeros_like(self.disturbed_v)
-            ut_wing             = 0.0 #np.zeros_like(self.disturbed_w)         
+            uw_wing             = 0.0 #np.zeros_like(self.disturbed_w)  
+            vr_2d               = 0.0
     
         try:
             pitch_command = conditions.propulsion.pitch_command
@@ -207,7 +216,7 @@ class Propeller(Energy_Component):
     
         else:
             chi = self.radius_distribution
-    
+        #chi[9]=chi[9]*1.1
         omega = np.abs(omega)        
         r_dim = chi*R                        # Radial coordinate 
         pi    = np.pi
@@ -239,6 +248,11 @@ class Propeller(Energy_Component):
         # 2 dimensiona radial distribution 
         chi_2d       = np.tile(chi ,(N,1))            
         r_2d         = np.repeat(chi_2d[ np.newaxis,:, :], ctrl_pts, axis=0) 
+        
+
+        # 2-D chord distribution 
+        chord     = np.tile(c,(N,1))  
+        chord_2d  = np.repeat(chord[np.newaxis,:, :], ctrl_pts, axis=0)        
     
         # Momentum theory approximation of inflow for BET if the advance ratio is large
         if use_BET :  
@@ -251,9 +265,6 @@ class Propeller(Energy_Component):
     
                 Leishman pg 165'''     
     
-            # 2-D chord distribution 
-            chord     = np.tile(c,(N,1))  
-            chord_2d  = np.repeat(chord[np.newaxis,:, :], ctrl_pts, axis=0)
     
             # 2-D blade twist distribution 
             theta_2d  = np.tile(total_blade_pitch,(N ,1))
@@ -287,15 +298,33 @@ class Propeller(Energy_Component):
             omega_R_2d  = np.tile(np.atleast_2d(omega*R),(1,N))
             omega_R_2d  = np.repeat(omega_R_2d[:, np.newaxis,  :], N, axis=1)
             
-            # Need to adjust uv_wing and ut_wing to match the proper orientation of the propeller rotation
+            # Find induced velocities from the wing at the blade evaluation points:
+            if case == 'disturbed_freestream':
+                x_center = vehicle.y_center # x- coord on disk, y-coord from wing
+                # New points to interpolate data: (corresponding to r,phi locations on propeller disc)
+                points = np.array([[VD.YC[i], VD.ZC[i]] for i in range(len(VD.YC))])
+                #points = points[points[:,0]<0]
+                xcoords = np.reshape(R*chi*np.cos(psi_2d),(N*N,1))
+                ycoords = vehicle.z_center + np.reshape(R*chi*np.sin(psi_2d),(N*N,1))
+                xi = np.array([[x_center[0]+xcoords[i][0],ycoords[i][0]] for i in range(len(xcoords))])
+                
+                ua_w = sp.interpolate.griddata(points,ua_wing,xi,method='linear')
+                uv_w = sp.interpolate.griddata(points,uv_wing,xi,method='linear')
+                uw_w = sp.interpolate.griddata(points,uw_wing,xi,method='linear') 
+                
+                ua_wing = np.reshape(ua_w,(N,N))
+                uw_wing = np.reshape(uw_w,(N,N))
+                uv_wing = np.reshape(uv_w,(N,N))
+            
+            # Need to adjust uv_wing and uw_wing to match the proper orientation of the propeller rotation
             if rotation == 'ccw':
-                vt_2d       = omega_R_2d * (r_2d  + mu_2d*np.sin(psi_2d) - np.array(ut_wing)*np.cos(psi_2d) + np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
-                vr_2d       = omega_R_2d * (mu_2d*np.cos(psi_2d) - np.array(ut_wing)*np.sin(psi_2d)  - np.array(uv_wing)*np.cos(psi_2d)  ) #+ np.array(ut_wing)*np.cos(psi_2d))                                 # radial velocity , positive outward   eqn 6.35 pg 165                 
-                va_2d       = omega_R_2d * (lambda_2d) + np.array(ua_wing)*Vv[0][0]  # velocity perpendicular to the disk plane, positive downward  eqn 6.36 pg 166  
+                vt_2d       = omega_R_2d * (r_2d  + mu_2d*np.sin(psi_2d)) + V_inf[:,0]*( -np.array(uw_wing)*np.cos(psi_2d) + np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
+                vr_2d       = omega_R_2d * (mu_2d*np.cos(psi_2d)) +V_inf[:,0]*( - np.array(uw_wing)*np.sin(psi_2d)  - np.array(uv_wing)*np.cos(psi_2d)  ) #+ np.array(ut_wing)*np.cos(psi_2d))                                 # radial velocity , positive outward   eqn 6.35 pg 165                 
+                va_2d       = omega_R_2d * (lambda_2d) + V_inf[:,0]*np.array(ua_wing) # velocity perpendicular to the disk plane, positive downward  eqn 6.36 pg 166  
             else:
-                vt_2d       = omega_R_2d * (r_2d  + mu_2d*np.sin(psi_2d) + np.array(ut_wing)*np.cos(psi_2d) + np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
-                vr_2d       = omega_R_2d * (mu_2d*np.cos(psi_2d) - np.array(ut_wing)*np.sin(psi_2d)  - np.array(uv_wing)*np.cos(psi_2d)  ) #+ np.array(ut_wing)*np.cos(psi_2d))                                 # radial velocity , positive outward   eqn 6.35 pg 165                 
-                va_2d       = omega_R_2d * (lambda_2d) + np.array(ua_wing)*Vv[0][0]  # velocity perpendicular to the disk plane, positive downward  eqn 6.36 pg 166                  
+                vt_2d       = omega_R_2d * (r_2d  + mu_2d*np.sin(psi_2d)) + V_inf[:,0]*( np.array(uw_wing)*np.cos(psi_2d) - np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
+                vr_2d       = omega_R_2d * (mu_2d*np.cos(psi_2d)) +V_inf[:,0]*( - np.array(uw_wing)*np.sin(psi_2d)  - np.array(uv_wing)*np.cos(psi_2d)  ) #+ np.array(ut_wing)*np.cos(psi_2d))                                 # radial velocity , positive outward   eqn 6.35 pg 165                 
+                va_2d       = omega_R_2d * (lambda_2d) + V_inf[:,0]*np.array(ua_wing)  # velocity perpendicular to the disk plane, positive downward  eqn 6.36 pg 166                  
             
             # ---------------------------------------------------------------------------------------
             # Including velocity deficit due to the boundary layer growth along the wing:
@@ -356,7 +385,7 @@ class Propeller(Energy_Component):
             nu_2d      = np.repeat(nu_2d[:, np.newaxis,  :], N, axis=1)   
             Re         = (U_2d*chord_2d)/nu_2d 
             Cl_max_ref = -0.0009*tc**3 + 0.0217*tc**2 - 0.0442*tc + 0.7005
-            Re_ref     = 9.*10**6      
+            Re_ref     = 6.*10**6      
             Cl1maxp    = Cl_max_ref * ( Re / Re_ref ) **0.1   #THIS IS INCORRECT ; 2*np.ones_like(Re) #
      
             
@@ -373,13 +402,13 @@ class Propeller(Energy_Component):
                 Cl = 2.*pi*alpha
     
                 # By 90 deg, it's totally stalled.
-                Cl[Cl>Cl1maxp]  = Cl1maxp[Cl>Cl1maxp]  
+                #Cl[Cl>Cl1maxp]  = Cl1maxp[Cl>Cl1maxp]  
                 Cl[alpha>=pi/2] = 0.  
                 #Cl[Ma[:,:]<1.]  = Cl[Ma[:,:]<1.]/((1-Ma[Ma[:,:]<1.]*Ma[Ma[:,:]<1.])**0.5+((Ma[Ma[:,:]<1.]*Ma[Ma[:,:]<1.])/(1+(1-Ma[Ma[:,:]<1.]*Ma[Ma[:,:]<1.])**0.5))*Cl[Ma<1.]/2)
-                Cl[Ma[:,:]<1.] = Cl[Ma[:,:]<1.]/((1-Ma[Ma[:,:]<1.]*Ma[Ma[:,:]<1.])**0.5) # Prandtl-Glauert
+                #Cl[Ma[:,:]<1.] = Cl[Ma[:,:]<1.]/((1-Ma[Ma[:,:]<1.]*Ma[Ma[:,:]<1.])**0.5) # Prandtl-Glauert
                 
                 # If the blade segments are supersonic, don't scale
-                Cl[Ma[:,:]>=1.] = Cl[Ma[:,:]>=1.]   
+                #Cl[Ma[:,:]>=1.] = Cl[Ma[:,:]>=1.]   
             
                 #There is also RE scaling
                 #This is an atrocious fit of DAE51 data at RE=50k for Cd
@@ -415,9 +444,9 @@ class Propeller(Energy_Component):
             dL     = 0.5 * rho_2d * U_2d**2 * chord_2d * Cl # eqn 6.37 (page 167 Leishman) 
             dD     = 0.5 * rho_2d * U_2d**2 * chord_2d * Cd # eqn 6.38 (page 167 Leishman) 
     
-            # application of tip loss factor 
-            tip_loss_factor          = 0.97 # (page 67 and  Leishman) make a property of the rotor
-            dL[r_2d>tip_loss_factor] = 0    # (page 63 & 90 and  Leishman) 
+            ## application of tip loss factor 
+            #tip_loss_factor          = 0.97 # (page 67 and  Leishman) make a property of the rotor
+            #dL[r_2d>tip_loss_factor] = 0    # (page 63 & 90 and  Leishman) 
     
             # normal and tangential forces  
             dFz  =dL*np.cos(phi_2d) - dD*np.sin(phi_2d) # eqn 6.39 (page 167 Leishman) 
@@ -432,6 +461,8 @@ class Propeller(Energy_Component):
             torque                  = np.atleast_2d((B * np.sum(blade_Q_distribution, axis = 1))).T 
             blade_T_distribution_2d = dFz*deltar_2d
             blade_Q_distribution_2d = dFx*r_2d*deltar_2d 
+            
+            blade_Gamma_2d = 0.5*U_2d*chord_2d*Cl
     
         # Blade Element Momentum Theory : large angle approximation
         else:  
@@ -566,7 +597,8 @@ class Propeller(Energy_Component):
             va_2d = np.repeat(up.T[ : , np.newaxis , :], N, axis=1).T
             vt_2d = np.repeat(ut.T[ : , np.newaxis , :], N, axis=1).T
             blade_T_distribution_2d = np.repeat(blade_T_distribution.T[ np.newaxis,:  , :], N, axis=0).T 
-            blade_Q_distribution_2d = np.repeat(blade_Q_distribution.T[ np.newaxis,:  , :], N, axis=0).T                 
+            blade_Q_distribution_2d = np.repeat(blade_Q_distribution.T[ np.newaxis,:  , :], N, axis=0).T    
+            blade_Gamma_2d = 0.5*V_inf[0][0]*chord_2d*Cl
     
     
         psi_2d      = np.repeat(np.atleast_2d(psi).T[np.newaxis,: ,:], N, axis=0).T        
@@ -629,7 +661,7 @@ class Propeller(Energy_Component):
                     axial_velocity_distribution_2d          = va_2d,
                     radial_velocity_distribution_2d         = vr_2d,
                     uv_wing                                 = uv_wing,
-                    ut_wing                                 = ut_wing,
+                    ut_wing                                 = uw_wing,
                     ua_wing                                 = ua_wing,
                     drag_coefficient                        = Cd,
                     lift_coefficient                        = Cl,       
@@ -651,7 +683,8 @@ class Propeller(Energy_Component):
                     power                                   = power,
                     power_coefficient                       = Cp, 
                     mid_chord_aligment                      = self.mid_chord_aligment,
-                    local_aoa                               = alpha
+                    local_aoa                               = alpha, 
+                    disc_circulation                        = blade_Gamma_2d 
             ) 
     
         return thrust, torque, power, Cp, outputs  , etap
