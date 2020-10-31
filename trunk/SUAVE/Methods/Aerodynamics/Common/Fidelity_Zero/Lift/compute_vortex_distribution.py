@@ -20,7 +20,6 @@ def compute_vortex_distribution(geometry,settings):
     ''' Compute the coordinates of panels, vortices , control points
     and geometry used to build the influence coefficient matrix.
     
-
     Assumptions: 
     Below is a schematic of the coordinates of an arbitrary panel  
     
@@ -45,13 +44,11 @@ def compute_vortex_distribution(geometry,settings):
     
     Source:  
     None
-
     Inputs:
     geometry.wings                                [Unitless]  
        
     Outputs:                                   
     VD - vehicle vortex distribution              [Unitless] 
-
     Properties Used:
     N/A 
          
@@ -139,8 +136,6 @@ def compute_vortex_distribution(geometry,settings):
         n               = np.linspace(n_sw+1,0,n_sw+1)         # vectorize
         thetan          = n*(np.pi/2)/(n_sw+1)                 # angular stations
         y_coordinates   = span*np.cos(thetan)                  # y locations based on the angular spacing 
-        y_a   = y_coordinates[:-1] 
-        y_b   = y_coordinates[1:] 
         
         # create empty vectors for coordinates 
         xah   = np.zeros(n_cw*n_sw)
@@ -257,11 +252,13 @@ def compute_vortex_distribution(geometry,settings):
             #Shift spanwise vortices onto section breaks  
             for i_seg in range(n_segments):
                 idx =  (np.abs(y_coordinates-section_stations[i_seg])).argmin()
-                y_coordinates[idx] = section_stations[i_seg]                
-
+                y_coordinates[idx] = section_stations[i_seg] 
+                
             # ---------------------------------------------------------------------------------------
             # STEP 6A: Define coordinates of panels horseshoe vortices and control points 
-            # ---------------------------------------------------------------------------------------
+            # --------------------------------------------------------------------------------------- 
+            y_a   = y_coordinates[:-1] 
+            y_b   = y_coordinates[1:]             
             del_y = y_coordinates[1:] - y_coordinates[:-1]           
             i_seg = 0           
             for idx_y in range(n_sw):
@@ -461,14 +458,15 @@ def compute_vortex_distribution(geometry,settings):
             # ---------------------------------------------------------------------------------------
             # STEP 6B: Define coordinates of panels horseshoe vortices and control points 
             # ---------------------------------------------------------------------------------------
-
+            y_a   = y_coordinates[:-1] 
+            y_b   = y_coordinates[1:] 
+            
             if sweep_le != None:
                 sweep = sweep_le
             else:                                                                
                 cf    = 0.25                          
                 sweep = np.arctan(((root_chord*cf) + (np.tan(sweep_qc)*span - cf*tip_chord)) /span)  
-
-            i    = np.arange(0,n_sw)             
+           
             wing_chord_ratio = (tip_chord-root_chord)/span
             wing_twist_ratio = (twist_tc-twist_rc)/span                    
             wing_areas.append(0.5*(root_chord+tip_chord)*span) 
@@ -490,11 +488,13 @@ def compute_vortex_distribution(geometry,settings):
                 eta_a = (y_a[idx_y])  
                 eta_b = (y_b[idx_y]) 
                 eta   = (y_b[idx_y] - delta_y[idx_y]/2) 
-
+                
+                # get spanwise discretization points
                 wing_chord_section_a  = root_chord + (eta_a*wing_chord_ratio) 
                 wing_chord_section_b  = root_chord + (eta_b*wing_chord_ratio)
                 wing_chord_section    = root_chord + (eta*wing_chord_ratio)
-
+                
+                # get chordwise discretization points
                 delta_x_a = wing_chord_section_a/n_cw   
                 delta_x_b = wing_chord_section_b/n_cw   
                 delta_x   = wing_chord_section/n_cw                                  

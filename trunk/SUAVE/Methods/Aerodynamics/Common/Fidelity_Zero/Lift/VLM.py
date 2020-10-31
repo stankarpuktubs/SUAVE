@@ -2,6 +2,7 @@
 # VLM.py
 # 
 # Created:  May 2019, M. Clarke
+#           Jul 2020, E. Botero
 
 # ----------------------------------------------------------------------
 #  Imports
@@ -21,10 +22,8 @@ from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.compute_RHS_matrix    
 ## @ingroup Methods-Aerodynamics-Common-Fidelity_Zero-Lift
 def VLM(conditions,settings,geometry):
     """Uses the vortex lattice method to compute the lift, induced drag and moment coefficients  
-
     Assumptions:
     None
-
     Source:
     1. Aerodynamics for Engineers, Sixth Edition by John Bertin & Russel Cummings 
     Pgs. 379-397(Literature)
@@ -37,7 +36,6 @@ def VLM(conditions,settings,geometry):
     International Journal of Mechanical, Aerospace, Industrial and Mechatronics Engineering 
     Vol:8 No:10, 2014
     
-
     Inputs:
     geometry.
        wing.
@@ -76,7 +74,6 @@ def VLM(conditions,settings,geometry):
     Cl                                         [Unitless]
     CDi                                        [Unitless]
     Cdi                                        [Unitless]
-
     Properties Used:
     N/A
     """ 
@@ -89,9 +86,19 @@ def VLM(conditions,settings,geometry):
     Sref       = geometry.reference_area
     
     
-    # define point about which moment coefficient is computed 
-    c_bar      = geometry.wings['main_wing'].chords.mean_aerodynamic
-    x_mac      = geometry.wings['main_wing'].aerodynamic_center[0] + geometry.wings['main_wing'].origin[0][0]
+    # define point about which moment coefficient is computed
+    if 'main_wing' in geometry.wings:
+        c_bar      = geometry.wings['main_wing'].chords.mean_aerodynamic
+        x_mac      = geometry.wings['main_wing'].aerodynamic_center[0] + geometry.wings['main_wing'].origin[0][0]
+    else:
+        c_bar = 0.
+        x_mac = 0.
+        for wing in geometry.wings:
+            if wing.vertical == False:
+                if c_bar <= wing.chords.mean_aerodynamic:
+                    c_bar = wing.chords.mean_aerodynamic
+                    x_mac = wing.aerodynamic_center[0] + wing.origin[0][0]
+            
     x_cg       = geometry.mass_properties.center_of_gravity[0][0]
     if x_cg == None:
         x_m = x_mac 
@@ -132,7 +139,7 @@ def VLM(conditions,settings,geometry):
    
     # Build the vector
     RHS = compute_RHS_matrix(n_sw,n_cw,delta,phi,conditions,geometry,sur_flag,slipstream)
-    
+
     # Compute vortex strength  
     n_cp  = VD.n_cp  
     gamma = np.linalg.solve(A,RHS)
@@ -157,6 +164,8 @@ def VLM(conditions,settings,geometry):
     # Use split to divide u, w, gamma, and Del_y into more arrays
     u_n_w        = np.array(np.array_split(u,n_w,axis=1))
     u_n_w_sw     = np.array(np.array_split(u,n_w*n_sw,axis=1)) 
+    w_n_w        = np.array(np.array_split(w,n_w,axis=1))
+    w_n_w_sw     = np.array(np.array_split(w,n_w*n_sw,axis=1)) #splitting into values along each spanwise location   
     w_ind_n_w    = np.array(np.array_split(w_ind,n_w,axis=1))
     w_ind_n_w_sw = np.array(np.array_split(w_ind,n_w*n_sw,axis=1))    
     gamma_n_w    = np.array(np.array_split(gamma,n_w,axis=1))
@@ -177,43 +186,31 @@ def VLM(conditions,settings,geometry):
     
     # Calculate each spanwise set of Cls and Cds
     cl_y        = np.sum(np.multiply(u_n_w_sw +1,(gamma_n_w_sw*Del_Y_n_w_sw)),axis=2).T/CS
-    cdi_y       = np.sum(np.multiply(-w_ind_n_w_sw,(gamma_n_w_sw*Del_Y_n_w_sw)),axis=2).T/CS 
-            
+    #cdi_y       = np.sum(np.multiply(-w_ind_n_w_sw,(gamma_n_w_sw*Del_Y_n_w_sw)),axis=2).T/CS 
+    cdi_y       = np.sum(np.multiply(w_n_w_sw,(gamma_n_w_sw*Del_Y_n_w_sw)),axis=2).T/CS    # Wrong, cdi is not computed this way, it needs to be cl_y*alpha_i
+    
+    #CL = np.sum(cl_y*CS, axis=1)/(0.5*Sref)
     # total lift and lift coefficient
-    L           = np.atleast_2d(np.sum(np.multiply((1+u),gamma*Del_Y),axis=1)).T 
+    L           = np.atleast_2d(np.sum(np.multiply((1+u),gamma*Del_Y),axis=1)).T # not actual lift, but math works out in CL
     CL          = L/(0.5*Sref)           # validated form page 402-404, aerodynamics for engineers # supersonic lift off by 2^3 
     CL[mach>1]  = CL[mach>1]*8   # supersonic lift off by a factor of 8 
     
-    # total drag and drag coefficient
-    D           =   -np.atleast_2d(np.sum(np.multiply(w_ind,gamma*Del_Y),axis=1)).T   
-    CDi         = D/(0.5*Sref)  
+    Di          = abs(np.atleast_2d(np.sum(np.multiply((1+u),gamma*Del_Y*-w),axis=1)).T) # induced drag = lift * alpha_i
+    CDi         = Di/(0.5*Sref)
     CDi[mach>1] = CDi[mach>1]*2 # supersonic drag off by a factor of 2 
     
     # pressure coefficient
-    U_tot       = np.sqrt((1+u)*(1+u) + v*v + w*w)
-    CP          = 1 - (U_tot)*(U_tot)
+    U_tot       = np.sqrt((1+u)*(1+u) + v*v + w*w) 
+    CP          = 1 - (U_tot)*(U_tot) # for incompressible 
      
     # moment coefficient
     CM          = np.atleast_2d(np.sum(np.multiply((X_M - VD.XCH*ones),Del_Y*gamma),axis=1)/(Sref*c_bar)).T     
     
     # delete MCM from VD data structure since it consumes memory
-    delattr(VD, 'MCM')   
+    delattr(VD, 'MCM')
     
-    # ---------------------------------------------------------------------------------------
-    #  Specify function outputs: 
-    # ---------------------------------------------------------------------------------------
-    VLM_outputs       = Data()
-    VLM_outputs.VD    = VD
-    VLM_outputs.MCM   = MCM
-    VLM_outputs.C_mn  = C_mn
-    VLM_outputs.gamma = gamma_3d
-    VLM_outputs.cl_y  = cl_y
-    VLM_outputs.cdi_y = cdi_y
-    VLM_outputs.CL    = CL
-    VLM_outputs.CDi   = CDi
-    VLM_outputs.CM    = CM
-    VLM_outputs.CL_wing = CL_wing
-    VLM_outputs.CDi_wing = CDi_wing
-    VLM_outputs.CP      = CP
+    VLM_outputs = Data()
+    VLM_outputs.VD = VD
+    VLM_outputs.gamma = gamma.T
     
-    return CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs
+    return CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP , VLM_outputs

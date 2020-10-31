@@ -197,7 +197,7 @@ class Propeller(Energy_Component):
         N        = len(c) # Number of stations     
         ctrl_pts = len(Vv)  
             
-        if  a_pol != None and a_loc != None:
+        if  a_pol != None and all(a_loc != None):
             airfoil_polars = Data() 
             # check dimension of section
             if len(a_loc) != N:
@@ -300,13 +300,13 @@ class Propeller(Energy_Component):
             
             # Find induced velocities from the wing at the blade evaluation points:
             if case == 'disturbed_freestream':
-                x_center = vehicle.y_center # x- coord on disk, y-coord from wing
+                y_center = vehicle.prop_y_center # x- coord on disk, y-coord from wing
                 # New points to interpolate data: (corresponding to r,phi locations on propeller disc)
                 points = np.array([[VD.YC[i], VD.ZC[i]] for i in range(len(VD.YC))])
                 #points = points[points[:,0]<0]
-                xcoords = np.reshape(R*chi*np.cos(psi_2d),(N*N,1))
-                ycoords = vehicle.z_center + np.reshape(R*chi*np.sin(psi_2d),(N*N,1))
-                xi = np.array([[x_center[0]+xcoords[i][0],ycoords[i][0]] for i in range(len(xcoords))])
+                ycoords = np.reshape(R*chi*np.cos(psi_2d),(N*N,1))
+                zcoords = vehicle.propulsors.prop_net.propeller.prop_loc[2]  + np.reshape(R*chi*np.sin(psi_2d),(N*N,1))
+                xi = np.array([[y_center[0]+ycoords[i][0],zcoords[i][0]] for i in range(len(ycoords))])
                 
                 ua_w = sp.interpolate.griddata(points,ua_wing,xi,method='linear')
                 uv_w = sp.interpolate.griddata(points,uv_wing,xi,method='linear')
@@ -330,38 +330,38 @@ class Propeller(Energy_Component):
             # Including velocity deficit due to the boundary layer growth along the wing:
             # ---------------------------------------------------------------------------------------
             nu       = mu/rho 
-            if case == 'disturbed_freestream' and wake_type == 'viscous':
-                Rex_prop_plane = (np.sqrt(Vv[0][0]**2+Vv[0][1]**2+Vv[0][2]**2))*(prop_loc[0])/nu # Reynolds number at the propeller plane
-                Va_deficit = np.zeros_like(va_2d[0])
-                # If laminar:
-                if Rex_prop_plane<500000:
-                    #Flow is fully laminar
-                    delta_bl = 5.2*(prop_loc[0])/np.sqrt(Rex_prop_plane)
-                    for psi_i in range(len(va_2d[0])):
-                        for r_i in range(len(va_2d[0][0])):
-                            y = r_dim[r_i]*np.sin(psi[psi_i])
-                            if y<delta_bl: #within the boundary layer height and wing is in front of this location of propeller
-                                #Apply BL axial velocity deficit due to laminar BL at the TE of wing
-                                Va_deficit[psi_i][r_i] = Vv[0][0]*(1-y*np.sqrt(Vv[0][0]/(nu*c_wing)))
-                else:
-                    #Turbulent flow (currently assumes fully turbulent, eventually incorporate transition)
-                    delta_bl = 0.37*(prop_loc[0])/(Rex_prop_plane**(1/5))
-                    theta_turb = 0.036*prop_loc[0]/(Rex_prop_plane**(1/5))
-                    x_theta = (prop_loc[0]-c_wing)/theta_turb
-                    for psi_i in range(len(va_2d[0])):
-                        for r_i in range(len(va_2d[0][0])):
-                            y = abs(r_dim[r_i]*np.sin(psi[psi_i]))
-                            if y<=delta_bl:
-                                #if y<=0.05*delta_bl:
-                                    #y=0.05*delta_bl
-                                #Apply BL axial velocity deficit due to turbulent BL at the TE of wing (using 1/7th power law)
-                                if np.cos(psi[psi_i])>0 or (abs(r_dim[r_i]*np.cos(psi[psi_i])) <(span/2)-abs(prop_loc[1])): # no restriction on BL
-                                    W0 = Vv[0][0]/np.sqrt(4*np.pi*0.032*x_theta)
-                                    b = 2*theta_turb*np.sqrt(16*0.032*np.log(2)*x_theta)
-                                    Va_deficit[psi_i][r_i] = W0*np.exp(-4*np.log(2)*(y/b)**2)
-                                    # Edge: Va_deficit[psi_i][r_i] = va_2d[0][psi_i][r_i]*(1-(y/delta_bl)**(1/7))#Vv[0][0]*(1-(y/delta_bl)**(1/7))
+            #if case == 'disturbed_freestream' and wake_type == 'viscous':
+                #Rex_prop_plane = (np.sqrt(Vv[0][0]**2+Vv[0][1]**2+Vv[0][2]**2))*(prop_loc[0])/nu[0][0] # Reynolds number at the propeller plane
+                #Va_deficit = np.zeros_like(va_2d[0])
+                ## If laminar:
+                #if Rex_prop_plane<500000:
+                    ##Flow is fully laminar
+                    #delta_bl = 5.2*(prop_loc[0])/np.sqrt(Rex_prop_plane)
+                    #for psi_i in range(len(va_2d[0])):
+                        #for r_i in range(len(va_2d[0][0])):
+                            #y = r_dim[r_i]*np.sin(psi[psi_i])
+                            #if y<delta_bl: #within the boundary layer height and wing is in front of this location of propeller
+                                ##Apply BL axial velocity deficit due to laminar BL at the TE of wing
+                                #Va_deficit[psi_i][r_i] = Vv[0][0]*(1-y*np.sqrt(Vv[0][0]/(nu*c_wing)))
+                #else:
+                    ##Turbulent flow (currently assumes fully turbulent, eventually incorporate transition)
+                    #delta_bl = 0.37*(prop_loc[0])/(Rex_prop_plane**(1/5))
+                    #theta_turb = 0.036*prop_loc[0]/(Rex_prop_plane**(1/5))
+                    #x_theta = (prop_loc[0]-c_wing)/theta_turb
+                    #for psi_i in range(len(va_2d[0])):
+                        #for r_i in range(len(va_2d[0][0])):
+                            #y = (r_dim[r_i]*np.sin(psi[psi_i]))
+                            #if abs(y+vehicle.z_center)<=delta_bl:
+                                ##if y<=0.05*delta_bl:
+                                    ##y=0.05*delta_bl
+                                ##Apply BL axial velocity deficit due to turbulent BL at the TE of wing (using 1/7th power law)
+                                #if np.cos(psi[psi_i])>0 or (abs(r_dim[r_i]*np.cos(psi[psi_i])) <(span/2)-abs(prop_loc[1])): # no restriction on BL
+                                    ##W0 = Vv[0][0]/np.sqrt(4*np.pi*0.032*x_theta)
+                                    ##b = 2*theta_turb*np.sqrt(16*0.032*np.log(2)*x_theta)
+                                    #Va_deficit[psi_i][r_i] = (abs(y+vehicle.z_center)/delta_bl)**(1/7) #W0*np.exp(-4*np.log(2)*(abs(y+vehicle.z_center)/b)**2)
+                                    ## Edge: Va_deficit[psi_i][r_i] = va_2d[0][psi_i][r_i]*(1-(y/delta_bl)**(1/7))#Vv[0][0]*(1-(y/delta_bl)**(1/7))
                                 
-                va_2d = va_2d - Va_deficit#np.array(Va_deficit*(1-(prop_loc[0]-c_wing))**3)
+                #va_2d = va_2d - Va_deficit#np.array(Va_deficit*(1-(prop_loc[0]-c_wing))**3)
             
             # local total velocity 
             U_2d   = np.sqrt(np.sqrt(vt_2d**2 + va_2d**2)**2 + vr_2d**2) # (page 165 Leishman)
@@ -390,13 +390,13 @@ class Propeller(Energy_Component):
      
             
             # Compute blade Cl and Cd distribution from the airfoil data if provided else use thin airfoil theory 
-            if  a_pol != None and a_loc != None:  
+            if  a_pol != None and all(a_loc != None):  
                 Cl    = np.zeros((ctrl_pts,N,N))              
                 Cdval = np.zeros((ctrl_pts,N,N))                 
                 for ii in range(ctrl_pts):
                     for jj in range(N):                 
-                        Cl[ii,:,jj]    = airfoil_cl_surs[a_geo[a_loc[jj]]](Re[ii,:,jj],alpha[ii,:,jj],grid=False)  
-                        Cdval[ii,:,jj] = airfoil_cd_surs[a_geo[a_loc[jj]]](Re[ii,:,jj],alpha[ii,:,jj],grid=False)  
+                        Cl[ii,:,jj]    = airfoil_cl_surs[a_geo[int(a_loc[jj])]](Re[ii,:,jj],alpha[ii,:,jj],grid=False)  
+                        Cdval[ii,:,jj] = airfoil_cd_surs[a_geo[int(a_loc[jj])]](Re[ii,:,jj],alpha[ii,:,jj],grid=False)  
             else:
                 # If not airfoil polar provided, use 2*pi as lift curve slope
                 Cl = 2.*pi*alpha

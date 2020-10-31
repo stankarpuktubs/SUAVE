@@ -14,25 +14,15 @@ from SUAVE.Methods.Propulsion.wing_effect import wing_effect
 from SUAVE.Methods.Propulsion.isolated_analysis import residual_thrust_equal_drag
 from SUAVE.Methods.Propulsion.isolated_analysis import isolated_analysis
 
+import pylab as plt
+
 def pusher_analysis(vehicle, conditions, ylocs,Drag_iso):
     # Evaluates propeller performance for the given vehicle
     
     # Set VLM settings to use surrogate instead of slipstream:
-    VLM_settings = VLM_setup(conditions)
-    
-    # First find alpha to meet L=W: (unless drag_iso is already passed in)
-    #iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, VLM_settings, conditions)
-    
-    #--------------------------------------------------------------
-    # Specify the analysis settings for the problem:
-    #--------------------------------------------------------------
-    vehicle.propulsors.prop_net.propeller.analysis_settings.case = 'disturbed_freestream'   
-    vehicle.propulsors.prop_net.propeller.prop_loc[0] = vehicle.wings.main_wing.chords.root + 0.2
+    VLM_settings                           = VLM_setup(conditions)
     VLM_settings.use_surrogate             = True
-    VLM_settings.include_slipstream_effect = False
-    
-    # Compute the propeller-plane flow field in the wing wake:
-    vehicle  = wing_effect(vehicle,conditions)
+    VLM_settings.include_slipstream_effect = False    
     
     #-----------------------------------------------------------------------------------------
     # Evaluate propeller performance along the span of the wing:
@@ -48,7 +38,7 @@ def pusher_analysis(vehicle, conditions, ylocs,Drag_iso):
         # Update propeller y-location:
         vehicle.propulsors.prop_net.propeller.prop_loc[1] = ylocs[i] 
         prop_y_center    = np.array([vehicle.propulsors.prop_net.propeller.prop_loc[1]])
-        vehicle.y_center = prop_y_center
+        vehicle.prop_y_center = prop_y_center
         
         # Find omega to produce the thrust that equals the wing drag:
         omega_guess = vehicle.propulsors.prop_net.propeller.inputs.omega
@@ -87,3 +77,77 @@ def VLM_setup(conditions):
     VLM_settings.use_surrogate             = True
     VLM_settings.include_slipstream_effect = False
     return VLM_settings   
+
+
+def plot_disks(vehicle,outputs):
+    psi   = outputs.azimuthal_distribution_2d[0,:,:]
+    r     = outputs.blade_radial_distribution_normalized_2d[0,:,:]  
+    
+    # Adjust so that the hub is included in the plot:
+    rh = vehicle.propulsors.prop_net.propeller.hub_radius
+        
+    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    CS_0 = axis0.contourf(psi, r, outputs.ut_wing,100,cmap=plt.cm.jet)    
+    cbar0 = plt.colorbar(CS_0, ax=axis0)
+    #cbar0 = plt.colorbar.ColorbarBase(CS_0,ax=axis0, norm=plt.colors.Normalize(vmin=-1,vmax=1),orientation='horizontal')
+    cbar0.ax.set_ylabel('$\dfrac{V_a-V_\infty}{V_\infty}$, m/s')
+    axis0.set_title('Downwash Velocity from Wing')
+    axis0.set_rorigin(-rh)
+    #cbar0 =matplotlib.pyplot.clim(-1,1)
+    # offset_radial_axis(ax) # Matplotlib < 2.2.3
+    #add_scale(axis0)    
+        
+    #fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    #CS_0 = axis0.contourf(psi, r, outputs.uv_wing,100,cmap=plt.cm.jet)    
+    #cbar0 = plt.colorbar(CS_0, ax=axis0)
+    #cbar0.ax.set_ylabel('$\dfrac{V_a-V_\infty}{V_\infty}$, m/s')
+    #axis0.set_title('Spanwise Velocity From Wing')
+    #axis0.set_rorigin(-rh)
+    
+    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    CS_0 = axis0.contourf(psi, r, outputs.ua_wing,100,cmap=plt.cm.jet)    
+    cbar0 = plt.colorbar(CS_0, ax=axis0)
+    cbar0.ax.set_ylabel('$\dfrac{V_a-V_\infty}{V_\infty}$, m/s')
+    axis0.set_title('Axial Velocity From Wing')
+    axis0.set_rorigin(-rh)
+    #ax.set_xlim(right=7000)
+    
+    
+    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    CS_0 = axis0.contourf(psi, r, outputs.axial_velocity_distribution_2d[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet)    
+    cbar0 = plt.colorbar(CS_0, ax=axis0)
+    cbar0.ax.set_ylabel('$\dfrac{V_a}{V_\infty}$, m/s')
+    axis0.set_title('Axial Velocity of Propeller') 
+    axis0.set_rorigin(-rh)
+    
+    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    CS_0 = axis0.contourf(psi, r, outputs.tangential_velocity_distribution_2d[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet)    
+    cbar0 = plt.colorbar(CS_0, ax=axis0)
+    cbar0.ax.set_ylabel('$\dfrac{V_t}{V_\infty}$, m/s')
+    axis0.set_title('Tangential Velocity of Propeller')   
+    axis0.set_rorigin(-rh)
+    
+    #fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    #CS_0 = axis0.contourf(psi, r, outputs.radial_velocity_distribution_2d[0],100,cmap=plt.cm.jet)    
+    #cbar0 = plt.colorbar(CS_0, ax=axis0)
+    #cbar0.ax.set_ylabel('$\dfrac{V_r}{V_\infty}$, m/s')
+    #axis0.set_title('Radial Velocity of Propeller')
+    #axis0.set_rorigin(-rh)
+    
+    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    CS_0 = axis0.contourf(psi, r, outputs.thrust_distribution_2d[0],100,cmap=plt.cm.jet)#,cmap=plt.cm.jet)    # -np.pi+psi turns it 
+    cbar0 = plt.colorbar(CS_0, ax=axis0)
+    cbar0.ax.set_ylabel('Thrust (N)')
+    axis0.set_title('Thrust Distribution of Propeller')  
+    axis0.set_rorigin(-rh)
+
+    
+    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
+    CS_0 = axis0.contourf(psi, r, outputs.torque_distribution_2d[0],100,cmap=plt.cm.jet)#,cmap=plt.cm.jet)    # -np.pi+psi turns it 
+    cbar0 = plt.colorbar(CS_0, ax=axis0)
+    cbar0.ax.set_ylabel('Torque (Nm)')
+    axis0.set_title('Torque Distribution of Propeller') 
+    axis0.set_rorigin(-rh)
+    
+    plt.show()
+    return

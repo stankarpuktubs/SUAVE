@@ -33,15 +33,15 @@ def isolated_analysis(vehicle, conditions):
     conditions.aerodynamics.angle_of_attack = np.array([[ aoa_new ]])
     
     # Lift and Drag for Isolated wing:    
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP , VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
     CD_wing      = 0.012 + CDi_wing[0][0]   
-    Drag_iso     = CD_wing*0.5*conditions.freestream.density*vehicle.cruise_speed**2*vehicle.reference_area 
-    Lift_iso     = CL*0.5*conditions.freestream.density*vehicle.cruise_speed**2*vehicle.reference_area 
+    Drag_iso     = CD_wing*0.5*conditions.freestream.density*conditions.freestream.velocity**2*vehicle.reference_area 
+    Lift_iso     = CL*0.5*conditions.freestream.density*conditions.freestream.velocity**2*vehicle.reference_area 
     
     #-------------------------------------------------------------------    
     # Now, we find omega to meet Thrust = Drag_iso
     #-------------------------------------------------------------------
-    omega_guess = np.array([[ 2800*Units.rpm ]])
+    omega_guess = np.array([[ 2200*Units.rpm ]])
     omega_new = scipy.optimize.newton(residual_thrust_equal_drag, omega_guess[0][0], args=(Drag_iso[0],conditions,vehicle))
     vehicle.propulsors.prop_net.propeller.inputs.omega = np.array([[ omega_new ]])
     
@@ -55,7 +55,7 @@ def isolated_analysis(vehicle, conditions):
     iso_results.etap_Iso  = etap[0][0]
     iso_results.CL_iso    = CL[0][0]
     iso_results.CD_iso    = CD_wing
-    iso_results.J         = vehicle.cruise_speed/((2/(2*np.pi))*omega_new*vehicle.propulsors.prop_net.propeller.tip_radius*2)        
+    iso_results.J         = conditions.freestream.velocity/((2/(2*np.pi))*omega_new*vehicle.propulsors.prop_net.propeller.tip_radius*2)        
     
     return iso_results, Drag_iso, aoa_new, omega_new
 
@@ -66,8 +66,8 @@ def residual_lift_equal_weight(aoa_guess, conditions, VLM_settings, vehicle):
     conditions.aerodynamics.angle_of_attack = np.array([[ aoa_guess ]])  
     
     # Analyze the wing:
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP , VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
-    Lift = CL*0.5*conditions.freestream.density*vehicle.cruise_speed**2*vehicle.reference_area
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
+    Lift = CL*0.5*conditions.freestream.density*conditions.freestream.velocity**2*vehicle.reference_area
     
     # Compute the residual:
     diff = abs(Lift[0][0] - Weight)
@@ -80,7 +80,7 @@ def residual_thrust_equal_drag(omega_guess, Drag, conditions, vehicle ):
     # Spin propeller:
     F, Q, P, Cp , outputs , etap = vehicle.propulsors.prop_net.propeller.spin(conditions,vehicle)
     vehicle.propulsors.prop_net.propeller.outputs = outputs
-    Thrust = 2*F
+    Thrust = vehicle.propulsors.prop_net.number_of_engines*F
     
     # Compute the residual:
     diff = abs(Thrust[0][0] - Drag[0])
