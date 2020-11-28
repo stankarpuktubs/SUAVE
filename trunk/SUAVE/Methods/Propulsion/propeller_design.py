@@ -45,7 +45,7 @@ def propeller_design(prop,number_of_stations):
     """    
     # Unpack
     N      = number_of_stations       # this number determines the discretization of the propeller into stations 
-    B      = prop.number_blades
+    B      = prop.number_of_blades
     R      = prop.tip_radius
     Rh     = prop.hub_radius
     omega  = prop.angular_velocity    # Rotation Rate in rad/s
@@ -180,7 +180,7 @@ def propeller_design(prop,number_of_stations):
         #Step 10, repeat starting at step 2 with the new zeta
         diff = abs(zeta-zetan)
         
-        zeta = zetan[0][0]
+        zeta = zetan#[0][0]
     
     #Step 11, determine propeller efficiency etc...
     

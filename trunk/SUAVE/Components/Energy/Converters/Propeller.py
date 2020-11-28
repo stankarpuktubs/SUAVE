@@ -326,43 +326,9 @@ class Propeller(Energy_Component):
                 vr_2d       = omega_R_2d * (mu_2d*np.cos(psi_2d)) +V_inf[:,0]*( - np.array(uw_wing)*np.sin(psi_2d)  - np.array(uv_wing)*np.cos(psi_2d)  ) #+ np.array(ut_wing)*np.cos(psi_2d))                                 # radial velocity , positive outward   eqn 6.35 pg 165                 
                 va_2d       = omega_R_2d * (lambda_2d) + V_inf[:,0]*np.array(ua_wing)  # velocity perpendicular to the disk plane, positive downward  eqn 6.36 pg 166                  
             
-            # ---------------------------------------------------------------------------------------
-            # Including velocity deficit due to the boundary layer growth along the wing:
-            # ---------------------------------------------------------------------------------------
+
             nu       = mu/rho 
-            #if case == 'disturbed_freestream' and wake_type == 'viscous':
-                #Rex_prop_plane = (np.sqrt(Vv[0][0]**2+Vv[0][1]**2+Vv[0][2]**2))*(prop_loc[0])/nu[0][0] # Reynolds number at the propeller plane
-                #Va_deficit = np.zeros_like(va_2d[0])
-                ## If laminar:
-                #if Rex_prop_plane<500000:
-                    ##Flow is fully laminar
-                    #delta_bl = 5.2*(prop_loc[0])/np.sqrt(Rex_prop_plane)
-                    #for psi_i in range(len(va_2d[0])):
-                        #for r_i in range(len(va_2d[0][0])):
-                            #y = r_dim[r_i]*np.sin(psi[psi_i])
-                            #if y<delta_bl: #within the boundary layer height and wing is in front of this location of propeller
-                                ##Apply BL axial velocity deficit due to laminar BL at the TE of wing
-                                #Va_deficit[psi_i][r_i] = Vv[0][0]*(1-y*np.sqrt(Vv[0][0]/(nu*c_wing)))
-                #else:
-                    ##Turbulent flow (currently assumes fully turbulent, eventually incorporate transition)
-                    #delta_bl = 0.37*(prop_loc[0])/(Rex_prop_plane**(1/5))
-                    #theta_turb = 0.036*prop_loc[0]/(Rex_prop_plane**(1/5))
-                    #x_theta = (prop_loc[0]-c_wing)/theta_turb
-                    #for psi_i in range(len(va_2d[0])):
-                        #for r_i in range(len(va_2d[0][0])):
-                            #y = (r_dim[r_i]*np.sin(psi[psi_i]))
-                            #if abs(y+vehicle.z_center)<=delta_bl:
-                                ##if y<=0.05*delta_bl:
-                                    ##y=0.05*delta_bl
-                                ##Apply BL axial velocity deficit due to turbulent BL at the TE of wing (using 1/7th power law)
-                                #if np.cos(psi[psi_i])>0 or (abs(r_dim[r_i]*np.cos(psi[psi_i])) <(span/2)-abs(prop_loc[1])): # no restriction on BL
-                                    ##W0 = Vv[0][0]/np.sqrt(4*np.pi*0.032*x_theta)
-                                    ##b = 2*theta_turb*np.sqrt(16*0.032*np.log(2)*x_theta)
-                                    #Va_deficit[psi_i][r_i] = (abs(y+vehicle.z_center)/delta_bl)**(1/7) #W0*np.exp(-4*np.log(2)*(abs(y+vehicle.z_center)/b)**2)
-                                    ## Edge: Va_deficit[psi_i][r_i] = va_2d[0][psi_i][r_i]*(1-(y/delta_bl)**(1/7))#Vv[0][0]*(1-(y/delta_bl)**(1/7))
-                                
-                #va_2d = va_2d - Va_deficit#np.array(Va_deficit*(1-(prop_loc[0]-c_wing))**3)
-            
+
             # local total velocity 
             U_2d   = np.sqrt(np.sqrt(vt_2d**2 + va_2d**2)**2 + vr_2d**2) # (page 165 Leishman)
     
