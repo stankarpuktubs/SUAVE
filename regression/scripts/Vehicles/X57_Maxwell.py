@@ -1,6 +1,7 @@
 # Boeing_737.py
 #
 # Created: Feb 2020, M. Clarke
+#          Sep 2020, M. Clarke 
 
 """ setup file for the X57-Maxwell Electric Aircraft 
 """
@@ -59,7 +60,6 @@ def vehicle_setup():
 
     wing.sweeps.quarter_chord    = 0.0 * Units.deg
     wing.thickness_to_chord      = 0.12
-    wing.span_efficiency         = 0.9
     wing.areas.reference         = 15.45 * Units['meters**2']  
     wing.spans.projected         = 11. * Units.meter  
 
@@ -73,7 +73,7 @@ def vehicle_setup():
     wing.twists.root             = 3.0 * Units.degrees
     wing.twists.tip              = 1.5 * Units.degrees
 
-    wing.origin                  = [2.032, 0., 0.784] 
+    wing.origin                  = [[2.032, 0., 0.784]]
     wing.aerodynamic_center      = [0.558, 0., 0.784]
 
     wing.vertical                = False
@@ -95,7 +95,6 @@ def vehicle_setup():
 
     wing.sweeps.quarter_chord    = 0.0 * Units.deg
     wing.thickness_to_chord      = 0.12
-    wing.span_efficiency         = 0.95
     wing.areas.reference         = 3.74 * Units['meters**2']  
     wing.spans.projected         = 3.454  * Units.meter 
     wing.sweeps.quarter_chord    = 12.5 * Units.deg
@@ -110,8 +109,9 @@ def vehicle_setup():
     wing.twists.root             = 0.0 * Units.degrees
     wing.twists.tip              = 0.0 * Units.degrees
 
-    wing.origin                  = [6.248, 0., 0 ] 
+    wing.origin                  = [[6.248, 0., 0 ]]
     wing.aerodynamic_center      = [0.508, 0., 0.]
+
     wing.vertical                = False
     wing.symmetric               = True
     wing.high_lift               = False
@@ -131,7 +131,6 @@ def vehicle_setup():
 
     wing.sweeps.quarter_chord    = 25. * Units.deg
     wing.thickness_to_chord      = 0.12
-    wing.span_efficiency         = 0.9
     wing.areas.reference         = 2.258 * Units['meters**2']  
     wing.spans.projected         = 1.854   * Units.meter 
 
@@ -145,7 +144,7 @@ def vehicle_setup():
     wing.twists.root             = 0.0 * Units.degrees
     wing.twists.tip              = 0.0 * Units.degrees
 
-    wing.origin                  = [6.01 ,0,  0.623] 
+    wing.origin                  = [[6.01 ,0,  0.623]]
     wing.aerodynamic_center      = [0.508 ,0,0] 
 
     wing.vertical                = True 
@@ -215,7 +214,7 @@ def vehicle_setup():
     # Design the Propeller
     prop = SUAVE.Components.Energy.Converters.Propeller() 
 
-    prop.number_blades       = 2.0
+    prop.number_of_blades       = 2.0
     prop.freestream_velocity = 135.*Units['mph']    
     prop.angular_velocity    = 1300.  * Units.rpm  
     prop.tip_radius          = 76./2. * Units.inches
@@ -224,7 +223,8 @@ def vehicle_setup():
     prop.design_altitude     = 12000. * Units.feet
     prop.design_altitude     = 12000. * Units.feet
     prop.design_thrust       = 1200.  
-    prop.origin              = [[2.,2.5,0.784],[2.,-2.5,0.784]]                 
+    prop.origin              = [[2.,2.5,0.784],[2.,-2.5,0.784]]         
+    prop.rotation            = [-1,1] 
     prop.symmetry            = True
     prop                     = propeller_design(prop)    
     net.propeller            = prop    
@@ -311,7 +311,7 @@ def configs_setup(vehicle):
 
     base_config = SUAVE.Components.Configs.Config(vehicle)
     base_config.tag = 'base'
-    base_config.propulsors.propulsor.pitch_command = 0 
+    base_config.propulsors.battery_propeller.pitch_command = 0 
     configs.append(base_config) 
 
 

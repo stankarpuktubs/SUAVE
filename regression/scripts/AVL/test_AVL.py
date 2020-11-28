@@ -14,12 +14,6 @@ import SUAVE
 from SUAVE.Core import Units 
 import numpy as np 
 
-<<<<<<< HEAD
-import numpy as np
-import pylab as plt
-
-=======
->>>>>>> 7609450215881bb768e55fb99688a086b2b40c4f
 import copy, time
 
 from SUAVE.Core import (
@@ -58,49 +52,39 @@ def main():
     run_new_regression = False
     
     # append AVL aerodynamic analysis
-    aerodynamics                                                          = SUAVE.Analyses.Aerodynamics.AVL() 
-    aerodynamics.process.compute.lift.inviscid.settings.spanwise_vortices = 30
-    aerodynamics.process.compute.lift.inviscid.keep_files                 = True
-<<<<<<< HEAD
-    aerodynamics.geometry                                                 = copy.deepcopy(configs.cruise) 
-    aerodynamics.process.compute.lift.inviscid.training_file              = 'cruise_data_aerodynamics.txt'    
-=======
-    aerodynamics.geometry                                                 = copy.deepcopy(configs.cruise)    
->>>>>>> 7609450215881bb768e55fb99688a086b2b40c4f
+    aerodynamics                                                                     = SUAVE.Analyses.Aerodynamics.AVL() 
+    aerodynamics.process.compute.lift.inviscid.settings.number_spanwise_vortices     = 30
+    aerodynamics.process.compute.lift.inviscid.keep_files                            = True
+    aerodynamics.geometry                                                            = copy.deepcopy(configs.cruise)    
     configs_analyses.cruise.append(aerodynamics)                       
                                                                        
     # append AVL stability analysis                                    
-    stability                                                             = SUAVE.Analyses.Stability.AVL() 
-    stability.settings.spanwise_vortices                                  = 30
-    stability.keep_files                                                  = True
-<<<<<<< HEAD
-    stability.geometry                                                    = copy.deepcopy(configs.cruise)
-    stability.training_file                                               = 'cruise_data_stability.txt'    
-=======
-    stability.geometry                                                    = copy.deepcopy(configs.cruise) 
+    stability                                                                        = SUAVE.Analyses.Stability.AVL() 
+    stability.settings.number_spanwise_vortices                                      = 30
+    stability.keep_files                                                             = True
+    stability.geometry                                                               = copy.deepcopy(configs.cruise) 
     
     if run_new_regression: 
         # append AVL aerodynamic analysis 
-        aerodynamics.process.compute.lift.inviscid.regression_flag            = False  
-        aerodynamics.process.compute.lift.inviscid.save_regression_results    = True   
-        aerodynamics.process.compute.lift.inviscid.settings.spanwise_vortices = 30     
-        aerodynamics.process.compute.lift.inviscid.keep_files                 = True     
-        stability.regression_flag                                             = False 
-        stability.save_regression_results                                     = True   
-        stability.settings.spanwise_vortices                                  = 30
-        stability.keep_files                                                  = True  
+        aerodynamics.process.compute.lift.inviscid.regression_flag                   = False  
+        aerodynamics.process.compute.lift.inviscid.save_regression_results           = True   
+        aerodynamics.process.compute.lift.inviscid.settings.number_spanwise_vortices = 30     
+        aerodynamics.process.compute.lift.inviscid.keep_files                        = True     
+        stability.regression_flag                                                    = False 
+        stability.save_regression_results                                            = True   
+        stability.settings.number_spanwise_vortices                                  = 30
+        stability.keep_files                                                         = True  
     else:   
-        aerodynamics.process.compute.lift.inviscid.regression_flag            = True   
-        aerodynamics.process.compute.lift.inviscid.save_regression_results    = False   
-        aerodynamics.process.compute.lift.inviscid.keep_files                 = True 
-        aerodynamics.process.compute.lift.inviscid.training_file              = 'cruise_aero_data.txt'   
-        stability.regression_flag                                             = True   
-        stability.save_regression_results                                     = False  
-        stability.keep_files                                                  = True 
-        stability.training_file                                               = 'cruise_stability_data.txt'     
+        aerodynamics.process.compute.lift.inviscid.regression_flag                   = True   
+        aerodynamics.process.compute.lift.inviscid.save_regression_results           = False   
+        aerodynamics.process.compute.lift.inviscid.keep_files                        = True 
+        aerodynamics.process.compute.lift.inviscid.training_file                     = 'cruise_aero_data.txt'   
+        stability.regression_flag                                                    = True   
+        stability.save_regression_results                                            = False  
+        stability.keep_files                                                         = True 
+        stability.training_file                                                      = 'cruise_stability_data.txt'     
    
     configs_analyses.cruise.append(aerodynamics)   
->>>>>>> 7609450215881bb768e55fb99688a086b2b40c4f
     configs_analyses.cruise.append(stability)
     
     # ------------------------------------------------------------------
@@ -160,11 +144,7 @@ def main():
 
     # lift coefficient check
     lift_coefficient              = results.segments.cruise.conditions.aerodynamics.lift_coefficient[0][0]
-<<<<<<< HEAD
-    lift_coefficient_true         = 0.6118540058887447
-=======
-    lift_coefficient_true         = 0.6119879019106254
->>>>>>> 7609450215881bb768e55fb99688a086b2b40c4f
+    lift_coefficient_true         = 0.6122926570141648
 
     print(lift_coefficient)
     diff_CL                       = np.abs(lift_coefficient  - lift_coefficient_true) 
@@ -174,11 +154,7 @@ def main():
     
     # moment coefficient check
     moment_coefficient            = results.segments.cruise.conditions.stability.static.CM[0][0]
-<<<<<<< HEAD
-    moment_coefficient_true       = -0.6266657809755998
-=======
-    moment_coefficient_true       = -0.771328904655715
->>>>>>> 7609450215881bb768e55fb99688a086b2b40c4f
+    moment_coefficient_true       = -0.6321233091259941
     
     print(moment_coefficient)
     diff_CM                       = np.abs(moment_coefficient - moment_coefficient_true)

@@ -52,19 +52,21 @@ class Solar(Propulsor):
             Properties Used:
             N/A
         """            
-        self.solar_flux        = None
-        self.solar_panel       = None
-        self.motor             = None
-        self.propeller         = None
-        self.esc               = None
-        self.avionics          = None
-        self.payload           = None
-        self.solar_logic       = None
-        self.battery           = None
-        self.nacelle_diameter  = None
-        self.engine_length     = None
-        self.number_of_engines = None
-        self.use_surrogate     = False
+        self.solar_flux                = None
+        self.solar_panel               = None
+        self.motor                     = None
+        self.propeller                 = None
+        self.esc                       = None
+        self.avionics                  = None
+        self.payload                   = None
+        self.solar_logic               = None
+        self.battery                   = None
+        self.nacelle_diameter          = None
+        self.engine_length             = None
+        self.number_of_engines         = None
+        self.tag                       = 'Solar'
+        self.use_surrogate             = False
+        self.generative_design_minimum = 0
     
     # manage process with a driver function
     def evaluate_thrust(self,state):
@@ -190,15 +192,19 @@ class Solar(Propulsor):
         current                                  = solar_logic.inputs.currentesc
         battery_draw                             = battery.inputs.power_in 
         battery_energy                           = battery.current_energy
+        voltage_open_circuit                     = battery.voltage_open_circuit
+        voltage_under_load                       = battery.voltage_under_load           
         
-        conditions.propulsion.solar_flux         = solar_flux.outputs.flux  
-        conditions.propulsion.rpm                = rpm
-        conditions.propulsion.current            = current
-        conditions.propulsion.battery_draw       = battery_draw
-        conditions.propulsion.battery_energy     = battery_energy
-        conditions.propulsion.motor_torque       = motor.outputs.torque
-        conditions.propulsion.propeller_torque   = Q        
-        conditions.propulsion.propeller_tip_mach = (R*rpm)/a
+        conditions.propulsion.solar_flux           = solar_flux.outputs.flux  
+        conditions.propulsion.rpm                  = rpm
+        conditions.propulsion.voltage_open_circuit = voltage_open_circuit
+        conditions.propulsion.voltage_under_load   = voltage_under_load  
+        conditions.propulsion.current              = current
+        conditions.propulsion.battery_draw         = battery_draw
+        conditions.propulsion.battery_energy       = battery_energy
+        conditions.propulsion.motor_torque         = motor.outputs.torque
+        conditions.propulsion.propeller_torque     = Q        
+        conditions.propulsion.propeller_tip_mach   = (R*rpm*Units.rpm)/a
         
         #Create the outputs
         F                                        = num_engines * F * [1,0,0]   
@@ -206,7 +212,7 @@ class Solar(Propulsor):
         conditions.propulsion.disc_loading       = (F_mag.T)/ (num_engines*np.pi*(R)**2) # N/m^2               
         conditions.propulsion.power_loading      = (F_mag.T)/(P)  # N/W                  
         
-        mdot = np.zeros_like(F)
+        mdot = state.ones_row(1)*0.0
 
         results = Data()
         results.thrust_force_vector = F

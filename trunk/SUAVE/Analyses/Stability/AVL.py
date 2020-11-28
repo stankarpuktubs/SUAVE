@@ -85,8 +85,8 @@ class AVL(Stability):
         self.settings                               = Settings()
         self.settings.filenames.log_filename        = sys.stdout
         self.settings.filenames.err_filename        = sys.stderr        
-        self.settings.spanwise_vortices             = 20
-        self.settings.chordwise_vortices            = 10
+        self.settings.number_spanwise_vortices      = 20
+        self.settings.number_chordwise_vortices     = 10
         self.settings.trim_aircraft                 = False 
                                                     
         # Conditions table, used for surrogate model training
@@ -423,8 +423,7 @@ class AVL(Stability):
                 wing = populate_control_sections(wing)     
                 num_cs_on_wing = len(wing.control_surfaces)
                 num_cs +=  num_cs_on_wing
-                for cs in wing.control_surfaces:
-                    ctrl_surf = wing.control_surfaces[cs]     
+                for ctrl_surf in wing.control_surfaces:
                     cs_names.append(ctrl_surf.tag)  
                     if (type(ctrl_surf) ==  Slat):
                         ctrl_surf_function  = 'slat'
@@ -441,18 +440,18 @@ class AVL(Stability):
         # translate conditions
         cases                            = translate_conditions_to_cases(self, run_conditions)    
         for case in cases:
-            cases[case].stability_and_control.number_control_surfaces = num_cs
-            cases[case].stability_and_control.control_surface_names   = cs_names
+            case.stability_and_control.number_control_surfaces = num_cs
+            case.stability_and_control.control_surface_names   = cs_names
         self.current_status.cases        = cases  
         
        # write casefile names using the templates defined in MACE/Analyses/AVL/AVL_Data_Classes/Settings.py 
         for case in cases:  
-            cases[case].aero_result_filename_1     = aero_results_template_1.format(case)        # 'stability_axis_derivatives_{}.dat'  
-            cases[case].aero_result_filename_2     = aero_results_template_2.format(case)        # 'surface_forces_{}.dat'
-            cases[case].aero_result_filename_3     = aero_results_template_3.format(case)        # 'strip_forces_{}.dat'  
-            cases[case].aero_result_filename_4     = aero_results_template_4.format(case)        # 'body_axis_derivatives_{}.dat'
-            cases[case].eigen_result_filename_1    = dynamic_results_template_1.format(case)     # 'eigen_mode_{}.dat'
-            cases[case].eigen_result_filename_2    = dynamic_results_template_2.format(case)     # 'system_matrix_{}.dat'
+            case.aero_result_filename_1     = aero_results_template_1.format(case.tag)      # 'stability_axis_derivatives_{}.dat'  
+            case.aero_result_filename_2     = aero_results_template_2.format(case.tag)      # 'surface_forces_{}.dat'
+            case.aero_result_filename_3     = aero_results_template_3.format(case.tag)      # 'strip_forces_{}.dat'  
+            case.aero_result_filename_4     = aero_results_template_4.format(case.tag)      # 'body_axis_derivatives_{}.dat'
+            case.eigen_result_filename_1    = dynamic_results_template_1.format(case.tag)   # 'eigen_mode_{}.dat'
+            case.eigen_result_filename_2    = dynamic_results_template_2.format(case.tag)   # 'system_matrix_{}.dat'
         
         # write the input files
         with redirect.folder(run_folder,force=False):

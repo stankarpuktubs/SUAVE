@@ -38,10 +38,10 @@ def write_geometry(avl_object,run_script_path):
     """    
     
     # unpack inputs
-    aircraft            = avl_object.geometry
-    geometry_file       = avl_object.settings.filenames.features
-    spanwise_vortices   = avl_object.settings.spanwise_vortices
-    chordwise_vortices  = avl_object.settings.chordwise_vortices
+    aircraft                   = avl_object.geometry
+    geometry_file              = avl_object.settings.filenames.features
+    number_spanwise_vortices   = avl_object.settings.number_spanwise_vortices
+    number_chordwise_vortices  = avl_object.settings.number_chordwise_vortices
     # Open the geometry file after purging if it already exists
     purge_files([geometry_file]) 
     geometry             = open(geometry_file,'w')
@@ -52,12 +52,12 @@ def write_geometry(avl_object,run_script_path):
         
         for w in aircraft.wings:
             avl_wing      = translate_avl_wing(w)
-            wing_text     = make_surface_text(avl_wing,spanwise_vortices,chordwise_vortices)
+            wing_text     = make_surface_text(avl_wing,number_spanwise_vortices,number_chordwise_vortices)
             geometry.write(wing_text)  
             
         for b in aircraft.fuselages:
             avl_body  = translate_avl_body(b)
-            body_text = make_body_text(avl_body,chordwise_vortices)
+            body_text = make_body_text(avl_body,number_chordwise_vortices)
             geometry.write(body_text)
             
     return
@@ -112,9 +112,9 @@ def make_header_text(avl_object):
     Sref  = avl_object.geometry.wings['main_wing'].areas.reference
     Cref  = avl_object.geometry.wings['main_wing'].chords.mean_aerodynamic
     Bref  = avl_object.geometry.wings['main_wing'].spans.projected
-    Xref  = avl_object.geometry.mass_properties.center_of_gravity[0]
-    Yref  = avl_object.geometry.mass_properties.center_of_gravity[1]
-    Zref  = avl_object.geometry.mass_properties.center_of_gravity[2]
+    Xref  = avl_object.geometry.mass_properties.center_of_gravity[0][0]
+    Yref  = avl_object.geometry.mass_properties.center_of_gravity[0][1]
+    Zref  = avl_object.geometry.mass_properties.center_of_gravity[0][2]
     name  = avl_object.geometry.tag
 
     mach = 0.0
@@ -125,7 +125,7 @@ def make_header_text(avl_object):
     return header_text
 
 
-def make_surface_text(avl_wing,spanwise_vortices,chordwise_vortices):
+def make_surface_text(avl_wing,number_spanwise_vortices,number_chordwise_vortices):
     """This function writes the surface text using the template required for the AVL executable to read
 
     Assumptions:
@@ -168,10 +168,10 @@ SURFACE
         # Define precision of analysis. See AVL documentation for reference 
         chordwise_vortex_spacing = 1.0
         spanwise_vortex_spacing  = -1.1                              # cosine distribution i.e. || |   |    |    |  | ||
-        ordered_tags = sorted(avl_wing.sections, key = lambda x: x.origin[2])
+        ordered_tags = sorted(avl_wing.sections, key = lambda x: x.origin[0][2])
         
         # Write text 
-        surface_text = surface_base.format(name,chordwise_vortices,chordwise_vortex_spacing,spanwise_vortices ,spanwise_vortex_spacing,ydup)
+        surface_text = surface_base.format(name,number_chordwise_vortices,chordwise_vortex_spacing,number_spanwise_vortices ,spanwise_vortex_spacing,ydup)
         for i in range(len(ordered_tags)):
             section_text    = make_wing_section_text(ordered_tags[i])
             surface_text    = surface_text + section_text
@@ -181,10 +181,10 @@ SURFACE
         # Define precision of analysis. See AVL documentation for reference
         chordwise_vortex_spacing = 1.0        
         spanwise_vortex_spacing  = 1.0                              # cosine distribution i.e. || |   |    |    |  | ||
-        ordered_tags = sorted(avl_wing.sections, key = lambda x: x.origin[1])
+        ordered_tags = sorted(avl_wing.sections, key = lambda x: x.origin[0][1])
     
         # Write text  
-        surface_text = surface_base.format(name,chordwise_vortices,chordwise_vortex_spacing,spanwise_vortices ,spanwise_vortex_spacing,ydup)
+        surface_text = surface_base.format(name,number_chordwise_vortices,chordwise_vortex_spacing,number_spanwise_vortices ,spanwise_vortex_spacing,ydup)
         for i in range(len(ordered_tags)):
             section_text    = make_wing_section_text(ordered_tags[i])
             surface_text    = surface_text + section_text
@@ -192,7 +192,7 @@ SURFACE
     return surface_text
 
 
-def make_body_text(avl_body,chordwise_vortices):   
+def make_body_text(avl_body,number_chordwise_vortices):   
     """This function writes the body text using the template required for the AVL executable to read
 
     Assumptions:
@@ -228,7 +228,7 @@ SURFACE
     
     # Form the horizontal part of the + shaped fuselage    
     hname           = name + '_horizontal'
-    horizontal_text = surface_base.format(hname,chordwise_vortices,chordwise_vortex_spacing)
+    horizontal_text = surface_base.format(hname,number_chordwise_vortices,chordwise_vortex_spacing)
        
     ordered_tags = []
     ordered_tags = sorted(avl_body.sections.horizontal, key = lambda x: x.origin[1])
@@ -238,7 +238,7 @@ SURFACE
         
     # Form the vertical part of the + shaped fuselage
     vname         = name + '_vertical'
-    vertical_text = surface_base.format(vname,chordwise_vortices,chordwise_vortex_spacing)   
+    vertical_text = surface_base.format(vname,number_chordwise_vortices,chordwise_vortex_spacing)   
     ordered_tags = []
     ordered_tags = sorted(avl_body.sections.vertical, key = lambda x: x.origin[2])
     for i in range(len(ordered_tags)):
@@ -285,9 +285,9 @@ SECTION
 {}
 '''
     # Unpack inputs
-    x_le          = avl_section.origin[0]
-    y_le          = avl_section.origin[1]
-    z_le          = avl_section.origin[2]
+    x_le          = avl_section.origin[0][0]
+    y_le          = avl_section.origin[0][1]
+    z_le          = avl_section.origin[0][2]
     chord         = avl_section.chord
     ainc          = avl_section.twist
     airfoil_coord = avl_section.airfoil_coord_file

@@ -15,15 +15,10 @@ from SUAVE.Core import Units
 import numpy as np
 import pylab as plt
 
-import copy, time
 
-from SUAVE.Core import (
-Data, Container,
-)
+from SUAVE.Core import Data
 
-from SUAVE.Methods.Propulsion.turbofan_sizing import turbofan_sizing
 from SUAVE.Methods.Center_of_Gravity.compute_component_centers_of_gravity import compute_component_centers_of_gravity
-from SUAVE.Methods.Center_of_Gravity.compute_aircraft_center_of_gravity import compute_aircraft_center_of_gravity
 
 import sys
 
@@ -65,22 +60,22 @@ def main():
     descent_throttle_2 = results.segments.descent_2.conditions.propulsion.throttle[3][0]
     
     # Truth values 
-    climb_throttle_1_truth   = 0.9857468628944336 
-    climb_throttle_2_truth   = 0.7952188198483993 
-    climb_throttle_3_truth   = 0.5066828579416367 
-    climb_throttle_4_truth   = 0.878134600022338 
-    climb_throttle_5_truth   = 1.021806039249955 
-    climb_throttle_6_truth   = 0.7136864572517849 
-    climb_throttle_7_truth   = 0.8877493204092387 
-    climb_throttle_8_truth   = 1.0868679444818625 
-    cruise_CL_1_truth        = 0.634777526547744 
-    cruise_CL_2_truth        = 0.6250634424249245 
-    cruise_CL_3_truth        = 0.7081424772096907 
-    descent_throttle_1_truth = 0.17517658209416148 
-    single_pt_CL_1_truth     = 0.2588077147541633 
-    single_pt_CL_2_truth     = 0.25874688162066317
-    loiter_CL_truth          = 0.5273996120576298 
-    descent_throttle_2_truth = 0.15532873504026581 
+    climb_throttle_1_truth   = 1.0496566472370832 
+    climb_throttle_2_truth   = 0.8593399482913113 
+    climb_throttle_3_truth   = 0.554225876096577 
+    climb_throttle_4_truth   = 0.9280243609603119 
+    climb_throttle_5_truth   = 1.0728767733778228 
+    climb_throttle_6_truth   = 0.7242365880065347 
+    climb_throttle_7_truth   = 0.8473685964195364 
+    climb_throttle_8_truth   = 1.0082845324269998 
+    cruise_CL_1_truth        = 0.634233677253148
+    cruise_CL_2_truth        = 0.6241429606481604
+    cruise_CL_3_truth        = 0.7066538388860613
+    descent_throttle_1_truth = 0.26763270958794305
+    single_pt_CL_1_truth     = 0.2581996153501819
+    single_pt_CL_2_truth     = 0.25816377507143445
+    loiter_CL_truth          = 0.5259908749142164
+    descent_throttle_2_truth = 0.2040608698706395
     
     # Store errors 
     error = Data()
@@ -100,7 +95,7 @@ def main():
     error.single_pt_CL_2     = np.max(np.abs(single_pt_CL_2       - single_pt_CL_2_truth ))  
     error.loiter_CL          = np.max(np.abs(loiter_CL            - loiter_CL_truth ))         
     error.descent_throttle_2 = np.max(np.abs(descent_throttle_2   - descent_throttle_2_truth))  
-    
+     
     print('Errors:')
     print(error)
     
@@ -173,7 +168,7 @@ def base_analysis(vehicle):
 
     # ------------------------------------------------------------------
     #  Weights
-    weights = SUAVE.Analyses.Weights.Weights_Tube_Wing()
+    weights = SUAVE.Analyses.Weights.Weights_Transport()
     weights.vehicle = vehicle
     analyses.append(weights)
 
@@ -235,8 +230,8 @@ def simple_sizing(configs, analyses):
     
     #compute centers of gravity
     #need to put here, otherwise, results won't be stored
-    compute_component_centers_of_gravity(base,compute_propulsor_origin=True)
-    compute_aircraft_center_of_gravity(base)
+    compute_component_centers_of_gravity(base)
+    base.center_of_gravity()
     
     # diff the new data
     base.store_diff()
@@ -284,24 +279,7 @@ def mission_setup(analyses):
 
     # base segment
     base_segment = Segments.Segment() 
-    ones_row     = base_segment.state.ones_row
-    
-    # ------------------------------------------------------------------
-    #  Ground
-    # ------------------------------------------------------------------
-
-    segment = Segments.Ground.Ground(base_segment)
-    segment.tag = "Ground"
-
-    segment.analyses.extend( analyses.takeoff )
-    segment.velocity_start           = 10 * Units.knots
-    segment.velocity_end             = 20.* Units.knots
-    segment.friction_coefficient     = 0.4
-    segment.time                     = 60 
-    segment.state.unknowns.throttle  = 0.3 * ones_row(1)  
-    
-    # add to misison
-    mission.append_segment(segment)    
+    ones_row     = base_segment.state.ones_row 
     
     # ------------------------------------------------------------------
     #   Takeoff Roll
@@ -314,8 +292,7 @@ def mission_setup(analyses):
     segment.velocity_start           = 100.* Units.knots
     segment.velocity_end             = 150 * Units.knots
     segment.friction_coefficient     = 0.04
-    segment.time                     = 20
-    segment.state.unknowns.throttle  = 1.0 * ones_row(1)  
+    segment.altitude                 = 0.0
 
     # add to misison
     mission.append_segment(segment)
@@ -545,10 +522,9 @@ def mission_setup(analyses):
 
     segment.analyses.extend( analyses.landing )
     segment.velocity_start           = 150 * Units.knots
-    segment.velocity_end             = 100
+    segment.velocity_end             = 100 * Units.knots
     segment.friction_coefficient     = 0.4
-    segment.time                     = 20
-    segment.state.unknowns.throttle  = 1.0 * ones_row(1)     
+    segment.altitude                 = 0.0
 
     # add to misison
     mission.append_segment(segment)     

@@ -5,6 +5,7 @@
 # Modified: Feb 2016, Andrew Wendorff
 #           Apr 2019, T. MacDonald
 #           Apr 2020, M. Clarke
+#           Sep 2020, M. Clarke 
 
 # ----------------------------------------------------------------------
 #  Imports
@@ -62,18 +63,18 @@ class Fidelity_Zero(Markup):
         settings.wing_parasite_drag_form_factor     = 1.1
         settings.fuselage_parasite_drag_form_factor = 2.3
         settings.oswald_efficiency_factor           = None
+        settings.span_efficiency                    = None
         settings.viscous_lift_dependent_drag_factor = 0.38
         settings.drag_coefficient_increment         = 0.0000
         settings.spoiler_drag_increment             = 0.00 
         settings.maximum_lift_coefficient           = np.inf
-        settings.number_panels_spanwise             = None 
-        settings.number_panels_chordwise            = None 
+        settings.number_spanwise_vortices           = None 
+        settings.number_chordwise_vortices          = None 
         settings.use_surrogate                      = True 
-        settings.include_slipstream_effect          = False 
-        settings.plot_vortex_distribution           = False
+        settings.propeller_wake_model               = False 
         
         # build the evaluation process
-        compute = self.process.compute 
+        compute = self.process.compute
         
         compute.lift = Process()
 
@@ -125,12 +126,11 @@ class Fidelity_Zero(Markup):
         super(Fidelity_Zero, self).initialize()
         
         use_surrogate             = self.settings.use_surrogate
-        include_slipstream_effect = self.settings.include_slipstream_effect 
-        vortex_distribution_flag  = self.settings.plot_vortex_distribution 
-        n_sw                      = self.settings.number_panels_spanwise    
-        n_cw                      = self.settings.number_panels_chordwise  
-                                  
+        propeller_wake_model      = self.settings.propeller_wake_model 
+        n_sw                      = self.settings.number_spanwise_vortices
+        n_cw                      = self.settings.number_chordwise_vortices
+
         self.process.compute.lift.inviscid_wings.geometry = self.geometry 
-        self.process.compute.lift.inviscid_wings.initialize(use_surrogate , vortex_distribution_flag , n_sw ,  n_cw ,include_slipstream_effect )          
+        self.process.compute.lift.inviscid_wings.initialize(use_surrogate,n_sw,n_cw,propeller_wake_model)          
                                                             
     finalize = initialize                                          

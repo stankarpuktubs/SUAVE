@@ -12,7 +12,7 @@ import copy
 import numpy as np
 from SUAVE.Core import Units, Data
 from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.VLM import VLM
-from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.compute_induced_velocity_matrix import compute_induced_velocity_matrix
+from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.compute_wing_induced_velocity import compute_wing_induced_velocity
 
 
 def wing_effect(vehicle,conditions):

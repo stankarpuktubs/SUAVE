@@ -93,10 +93,10 @@ def VLM_setup(conditions):
     # --------------------------------------------------------------------------------
     vortices            = conditions.vortices
     VLM_settings        = Data()
-    VLM_settings.number_panels_spanwise   = vortices **2
-    VLM_settings.number_panels_chordwise  = vortices
+    VLM_settings.number_spanwise_vortices   = vortices **2
+    VLM_settings.number_chordwise_vortices  = vortices
     
     # Default is no slipstream:
     VLM_settings.use_surrogate             = True
-    VLM_settings.include_slipstream_effect = False
+    VLM_settings.propeller_wake_model      = False
     return VLM_settings   

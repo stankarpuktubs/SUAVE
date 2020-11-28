@@ -54,18 +54,20 @@ class Battery_Propeller(Propulsor):
             Properties Used:
             N/A
         """             
-        self.motor             = None
-        self.propeller         = None
-        self.esc               = None
-        self.avionics          = None
-        self.payload           = None
-        self.battery           = None
-        self.nacelle_diameter  = None
-        self.engine_length     = None
-        self.number_of_engines = None
-        self.voltage           = None
-        self.thrust_angle      = 0.0
-        self.use_surrogate     = False
+        self.motor                     = None
+        self.propeller                 = None
+        self.esc                       = None
+        self.avionics                  = None
+        self.payload                   = None
+        self.battery                   = None
+        self.nacelle_diameter          = None
+        self.engine_length             = None
+        self.number_of_engines         = None
+        self.voltage                   = None
+        self.thrust_angle              = 0.0
+        self.tag                       = 'Battery_Propeller'
+        self.use_surrogate             = False
+        self.generative_design_minimum = 0
     
     # manage process with a driver function
     def evaluate_thrust(self,state):
@@ -128,7 +130,8 @@ class Battery_Propeller(Propulsor):
         propeller.thrust_angle = self.thrust_angle
         
         # step 4
-        F, Q, P, Cp, outputs , etap = propeller.spin(conditions)
+        vehicle = None 
+        F, Q, P, Cp, outputs , etap = propeller.spin(conditions,vehicle)
             
         # Check to see if magic thrust is needed, the ESC caps throttle at 1.1 already
         eta        = conditions.propulsion.throttle[:,0,None]
@@ -183,11 +186,11 @@ class Battery_Propeller(Propulsor):
         conditions.propulsion.motor_torque          = motor.outputs.torque
         conditions.propulsion.propeller_torque      = Q
         conditions.propulsion.battery_specfic_power = -battery_draw/battery.mass_properties.mass # Wh/kg
-        conditions.propulsion.propeller_tip_mach    = (R*rpm)/a
+        conditions.propulsion.propeller_tip_mach    = (R*rpm*Units.rpm)/a
         
         # Create the outputs
         F                                           = num_engines* F * [np.cos(self.thrust_angle),0,-np.sin(self.thrust_angle)]      
-        mdot                                        = np.zeros_like(F) 
+        mdot                                        = state.ones_row(1)*0.0
         F_mag                                       = np.atleast_2d(np.linalg.norm(F, axis=1))  
         conditions.propulsion.disc_loading          = (F_mag.T)/ (num_engines*np.pi*(R)**2) # N/m^2                  
         conditions.propulsion.power_loading         = (F_mag.T)/(P)                         # N/W 

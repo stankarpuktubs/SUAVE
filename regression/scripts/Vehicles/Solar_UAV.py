@@ -35,9 +35,9 @@ def vehicle_setup():
     #   Vehicle-level Properties
     # ------------------------------------------------------------------    
     # mass properties
-    vehicle.mass_properties.takeoff           = 200. * Units.kg
-    vehicle.mass_properties.operating_empty   = 200. * Units.kg
-    vehicle.mass_properties.max_takeoff       = 200. * Units.kg 
+    vehicle.mass_properties.takeoff         = 250. * Units.kg
+    vehicle.mass_properties.operating_empty = 250. * Units.kg
+    vehicle.mass_properties.max_takeoff     = 250. * Units.kg 
     
     # basic parameters
     vehicle.reference_area                    = 80.       
@@ -64,7 +64,6 @@ def vehicle_setup():
     wing.chords.mean_aerodynamic = wing.areas.reference/wing.spans.projected
     wing.chords.root             = wing.areas.reference/wing.spans.projected
     wing.chords.tip              = wing.areas.reference/wing.spans.projected
-    wing.span_efficiency         = 0.98 
     wing.twists.root             = 0.0 * Units.degrees
     wing.twists.tip              = 0.0 * Units.degrees
     wing.highlift                = False  
@@ -73,7 +72,7 @@ def vehicle_setup():
     wing.number_end_ribs         = 2.
     wing.transition_x_upper      = 0.6
     wing.transition_x_lower      = 1.0
-    wing.origin                  = [3.0,0.0,0.0] # meters
+    wing.origin                  = [[3.0,0.0,0.0]] # meters
     wing.aerodynamic_center      = [3.0,0.0,0.0] # meters
     
     # add to vehicle
@@ -88,7 +87,6 @@ def vehicle_setup():
     wing.sweeps.quarter_chord    = 0 * Units.deg
     wing.thickness_to_chord      = 0.12
     wing.taper                   = 1.0
-    wing.span_efficiency         = 0.95 
     wing.areas.reference         = vehicle.reference_area * .15
     wing.areas.wetted            = 2.0 * wing.areas.reference
     wing.areas.exposed           = 0.8 * wing.areas.wetted
@@ -103,7 +101,7 @@ def vehicle_setup():
     wing.chords.root             = wing.areas.reference/wing.spans.projected
     wing.chords.tip              = wing.areas.reference/wing.spans.projected
     wing.chords.mean_aerodynamic = wing.areas.reference/wing.spans.projected  
-    wing.origin                  = [10.,0.0,0.0] # meters
+    wing.origin                  = [[10.,0.0,0.0]] # meters
     wing.aerodynamic_center      = [0.5,0.0,0.0] # meters
   
     # add to vehicle
@@ -119,7 +117,6 @@ def vehicle_setup():
     wing.sweeps.quarter_chord    = 0 * Units.deg
     wing.thickness_to_chord      = 0.12
     wing.taper                   = 1.0
-    wing.span_efficiency         = 0.97
     wing.areas.reference         = vehicle.reference_area * 0.1
     wing.spans.projected         = np.sqrt(wing.aspect_ratio*wing.areas.reference) 
     wing.chords.root             = wing.areas.reference/wing.spans.projected
@@ -130,7 +127,7 @@ def vehicle_setup():
     wing.areas.affected          = 0.6 * wing.areas.wetted    
     wing.twists.root             = 0.0 * Units.degrees
     wing.twists.tip              = 0.0 * Units.degrees  
-    wing.origin                  = [10.,0.0,0.0] # meters
+    wing.origin                  = [[10.,0.0,0.0]] # meters
     wing.aerodynamic_center      = [0.5,0.0,0.0] # meters
     wing.symmetric               = True  
     wing.vertical                = True 
@@ -172,17 +169,14 @@ def vehicle_setup():
     # Component 5 the Propeller
     # Design the Propeller
     prop                     = SUAVE.Components.Energy.Converters.Propeller()
-    prop.number_blades       = 2.0
+    prop.number_of_blades       = 2.0
     prop.freestream_velocity = 40.0 * Units['m/s']# freestream
     prop.angular_velocity    = 150. * Units['rpm']
     prop.tip_radius          = 4.25 * Units.meters
     prop.hub_radius          = 0.05 * Units.meters
     prop.design_Cl           = 0.7
     prop.design_altitude     = 14.0 * Units.km
-<<<<<<< HEAD
-=======
     prop.design_thrust       = None
->>>>>>> 7609450215881bb768e55fb99688a086b2b40c4f
     prop.design_power        = 3500.0 * Units.watts
     prop                     = propeller_design(prop) 
     net.propeller            = prop
@@ -193,7 +187,7 @@ def vehicle_setup():
     motor.no_load_current      = 4.5  * Units.ampere
     motor.speed_constant       = 120. * Units['rpm'] # RPM/volt converted to (rad/s)/volt    
     motor.propeller_radius     = prop.tip_radius
-    motor.propeller_Cp         = prop.power_coefficient
+    motor.propeller_Cp         = prop.design_power_coefficient
     motor.gear_ratio           = 12. # Gear ratio
     motor.gearbox_efficiency   = .98 # Gear box efficiency
     motor.expected_current     = 160. # Expected current
@@ -212,10 +206,11 @@ def vehicle_setup():
     net.avionics        = avionics      
 
     # Component 8 the Battery
-    bat                      = SUAVE.Components.Energy.Storages.Batteries.Constant_Mass.Lithium_Ion()
-    bat.mass_properties.mass = 55.0 * Units.kg
-    bat.specific_energy      = 450. * Units.Wh/Units.kg
+    bat = SUAVE.Components.Energy.Storages.Batteries.Constant_Mass.Lithium_Ion()
+    bat.mass_properties.mass = 90.0 * Units.kg
+    bat.specific_energy      = 600. * Units.Wh/Units.kg
     bat.resistance           = 0.05
+    bat.max_voltage          = 45.0
     initialize_from_mass(bat,bat.mass_properties.mass)
     net.battery              = bat
    
