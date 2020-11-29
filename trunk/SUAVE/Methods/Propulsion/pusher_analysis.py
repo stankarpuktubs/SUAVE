@@ -53,13 +53,14 @@ def pusher_analysis(vehicle, conditions, ylocs,Drag_iso):
         Cp_vals[i]    = Cp[0][0]
         Q_vals[i]     = Q[0][0]
         F_vals[i]     = F[0][0]
-        P_vals        = P[0][0]
+        P_vals[i]     = P[0][0]
     
     plot_results = Data()
     plot_results.omegas     = omega_vals
     plot_results.etaps      = etap_vals
     plot_results.Qs         = Q_vals
     plot_results.ylocs      = ylocs
+    plot_results.powers     = P_vals
     
     return plot_results
 

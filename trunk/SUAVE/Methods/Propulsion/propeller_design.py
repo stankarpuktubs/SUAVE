@@ -245,8 +245,8 @@ def propeller_design(prop,number_of_stations=20):
     
         #Step 10, repeat starting at step 2 with the new zeta
         diff = abs(zeta-zetan)
-        
-        zeta = zetan
+         
+        zeta = zetan 
     
     #Step 11, determine propeller efficiency etc...
     
