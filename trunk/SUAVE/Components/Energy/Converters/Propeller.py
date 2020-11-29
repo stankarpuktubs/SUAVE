@@ -576,7 +576,7 @@ class Propeller(Energy_Component):
         etap[omega==0.0]                                   = 0.0 
         
         # assign efficiency to network
-        conditions.propulsion.etap = etap   
+        conditions.propulsion.etap = etap  
         
         # store data
         self.azimuthal_distribution                   = psi  

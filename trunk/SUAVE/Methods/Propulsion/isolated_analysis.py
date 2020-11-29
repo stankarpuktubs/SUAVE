@@ -13,9 +13,7 @@ import scipy
 import numpy as np
 from SUAVE.Core import Units, Data
 from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.VLM import VLM
-
-
-
+ 
 def isolated_analysis(vehicle, conditions):
     #------------------------------------------------------------
     # Change analysis setting case to be uniform freestream:
