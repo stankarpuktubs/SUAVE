@@ -48,11 +48,10 @@ def generate_propeller_wake_distribution(prop,thrust_angle,m,VD,init_timestep_of
     B            = prop.number_of_blades
     gamma        = prop.outputs.disc_circulation
     blade_angles = np.linspace(0,2*np.pi,B+1)[:-1]       
-    nts          = 5 # neet to change
+    nts          = 20
     dt           = (2*np.pi/Na)/omega[0]
     time         = nts*dt[0]   
     ts           = np.linspace(0,time,nts)
-    
     num_prop     = len(prop.origin) 
 
     t0           = dt*init_timestep_offset
@@ -71,8 +70,8 @@ def generate_propeller_wake_distribution(prop,thrust_angle,m,VD,init_timestep_of
 
     # reshape gamma to find the average between stations 
     gamma_new = np.zeros((m,Na,(Nr-1)))
-    gamma_new = (gamma[:,:,:-1] + gamma[:,:,1:])*0.5 
-        
+    gamma_new = (gamma[:,:,:-1] + gamma[:,:,1:])*0.5
+
     # define empty arrays 
     WD        = Data()
     n         = Nr-1

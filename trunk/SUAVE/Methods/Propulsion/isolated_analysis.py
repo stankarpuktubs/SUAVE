@@ -50,6 +50,7 @@ def isolated_analysis(vehicle, conditions):
     iso_results.omega_Iso = omega_new
     iso_results.aoa_Iso   = aoa_new
     iso_results.Q_Iso     = Q[0][0]
+    iso_results.power     = P[0][0]
     iso_results.etap_Iso  = etap[0][0]
     iso_results.CL_iso    = CL[0][0]
     iso_results.CD_iso    = CD_wing

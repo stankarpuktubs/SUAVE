@@ -205,7 +205,7 @@ def VLM(conditions,settings,geometry,initial_timestep_offset = 0 ,wake_developme
     spanwise_w_ind    = np.sum(w_ind_n_w_sw,axis=2).T    
     D                 = np.sum(spanwise_w_ind*spanwise_Del_y.T*cl_y*CS,axis = 1) 
     cdi_y             = spanwise_w_ind*spanwise_Del_y.T*cl_y*CS
-    CDi               = np.atleast_2d(D/(Sref)).T
+    CDi               = np.atleast_2d(D/(Sref)).T  
     
     # --------------------------------------------------------------------------------------------------------
     # PRESSURE                                                                      
