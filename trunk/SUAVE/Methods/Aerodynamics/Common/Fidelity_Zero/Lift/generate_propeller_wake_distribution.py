@@ -47,13 +47,13 @@ def generate_propeller_wake_distribution(prop,thrust_angle,m,VD,init_timestep_of
     MCA          = prop.mid_chord_aligment 
     B            = prop.number_of_blades
     gamma        = prop.outputs.disc_circulation
-    blade_angles = np.linspace(0,2*np.pi,B+1)[:-1]       
-    nts          = 20
+    blade_angles = np.linspace(0,2*np.pi,B+1)[:-1]  
     dt           = (2*np.pi/Na)/omega[0]
-    time         = nts*dt[0]   
-    ts           = np.linspace(0,time,nts)
-    num_prop     = len(prop.origin) 
-
+    nts          = time/dt
+    nts[nts < 2] = 2        # minimum timestep so code does not break 
+    nts          = int(nts) # convert to interger
+    ts           = np.linspace(0,time,nts) 
+    num_prop     = len(prop.origin)  
     t0           = dt*init_timestep_offset
     start_angle  = omega[0]*t0 
 

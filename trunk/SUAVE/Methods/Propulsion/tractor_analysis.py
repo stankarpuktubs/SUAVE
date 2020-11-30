@@ -16,11 +16,15 @@ import pickle
 def tractor_cruise_optimization(vehicle, conditions,Nprops ):  
     
     # create data structure 
-    VLM_settings                           = Data()
-    VLM_settings.number_spanwise_vortices  = 25  
-    VLM_settings.number_chordwise_vortices = 5  
-    VLM_settings.use_surrogate             = False
-    VLM_settings.propeller_wake_model      = True   
+    VLM_settings                                 = Data()
+    VLM_settings.number_spanwise_vortices        = 25  
+    VLM_settings.number_chordwise_vortices       = 5  
+    VLM_settings.use_surrogate                   = False
+    VLM_settings.propeller_wake_model            = True   
+    VLM_settings.wake_development_time           = 0.05
+    
+    #if Nprops > 6:
+    #    VLM_settings.wake_development_time = 0.015
      
     # Determine the isolated performance of the wing and propeller in a steady and level condition:  
     iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions)
@@ -81,7 +85,11 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
     VLM_settings.number_spanwise_vortices  = 25  
     VLM_settings.number_chordwise_vortices = 5  
     VLM_settings.use_surrogate             = False
-    VLM_settings.propeller_wake_model      = True   
+    VLM_settings.propeller_wake_model      = True
+    VLM_settings.wake_development_time     = 0.05
+    
+    #if Nprops > 6:
+        #VLM_settings.wake_development_time = 0.015    
     
     results = Data()
     results.omega     = np.zeros(len(aoa_range))
@@ -99,7 +107,7 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
         conditions.aerodynamics.angle_of_attack = np.array([[aoa_range[i]]]) 
         
         # Determine the isolated performance of the wing and propeller in a steady and level condition:  
-        iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions)
+        #iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions)
             
         # bounds of variables 
         omega_lb = 100 * Units.rpm

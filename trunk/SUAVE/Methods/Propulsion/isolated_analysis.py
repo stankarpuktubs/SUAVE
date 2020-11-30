@@ -98,4 +98,6 @@ def VLM_setup(conditions):
     # Default is no slipstream:
     VLM_settings.use_surrogate             = True
     VLM_settings.propeller_wake_model      = False
+    VLM_settings.wake_development_time     = 0.05
+    
     return VLM_settings   
