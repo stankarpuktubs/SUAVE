@@ -22,12 +22,10 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     VLM_settings.use_surrogate                   = False
     VLM_settings.propeller_wake_model            = True   
     VLM_settings.wake_development_time           = 0.05
-    
-    #if Nprops > 6:
-    #    VLM_settings.wake_development_time = 0.015
      
-    # Determine the isolated performance of the wing and propeller in a steady and level condition:  
-    iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions)
+    # Determine the isolated performance of the wing and propeller in a steady and level condition: 
+    omega_guess = 1000*Units.rpm
+    iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions,omega_guess)
      
     # optimizaion  
     # bounds of variables
@@ -69,7 +67,7 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     results.power     = P[0][0]
     results.CL        = CL[0][0]
     results.CDi       = (CDi  + 0.012)[0][0] 
-    #results.etap_tot  = (1/sum(iso_results.power))*sum(iso_results.power*iso_results.etap_Iso)
+    results.etap_tot  = (1/sum(iso_results.power))*sum(iso_results.power*iso_results.etap_Iso)
     results.L_to_D    = results.CL/results.CDi
     
     # save results in pickle file
@@ -88,9 +86,6 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
     VLM_settings.propeller_wake_model      = True
     VLM_settings.wake_development_time     = 0.05
     
-    #if Nprops > 6:
-        #VLM_settings.wake_development_time = 0.015    
-    
     results = Data()
     results.omega     = np.zeros(len(aoa_range))
     results.etap      = np.zeros(len(aoa_range))
@@ -103,12 +98,14 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
     results.L_to_D    = np.zeros(len(aoa_range))
     
     for i in range(len(aoa_range)):
-        AoA = aoa_range[i]
-        conditions.aerodynamics.angle_of_attack = np.array([[aoa_range[i]]]) 
         
-        # Determine the isolated performance of the wing and propeller in a steady and level condition:  
-        #iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions)
-            
+        # Determine the isolated performance of the wing and propeller in a steady and level condition:
+        omega_guess = 1000*Units.rpm 
+        iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions,omega_guess)
+        
+        AoA = aoa_range[i]
+        conditions.aerodynamics.angle_of_attack = np.array([[aoa_range[i]]])     
+        
         # bounds of variables 
         omega_lb = 100 * Units.rpm
         omega_ub = 2500 * Units.rpm
@@ -141,7 +138,7 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
         results.power[i]     = P[0][0]
         results.CL[i]        = CL[0][0]
         results.CDi[i]       = (CDi  + 0.012)[0][0] 
-        #results.etap_tot[i]  = (1/sum(iso_results.power))*sum(iso_results.power*iso_results.etap_Iso)
+        results.etap_tot[i]  = (1/sum(iso_results.power))*sum(iso_results.power*iso_results.etap_Iso)
         results.L_to_D[i]    = results.CL[i]/results.CDi[i]
     
     # save results in pickle file

@@ -14,7 +14,7 @@ import numpy as np
 from SUAVE.Core import Units, Data
 from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.VLM import VLM
  
-def isolated_analysis(vehicle, conditions):
+def isolated_analysis(vehicle, conditions, omega_guess = 2200*Units.rpm):
     #------------------------------------------------------------
     # Change analysis setting case to be uniform freestream:
     #------------------------------------------------------------
@@ -39,7 +39,7 @@ def isolated_analysis(vehicle, conditions):
     #-------------------------------------------------------------------    
     # Now, we find omega to meet Thrust = Drag_iso
     #-------------------------------------------------------------------
-    omega_guess = np.array([[ 2200*Units.rpm ]])
+    omega_guess = np.array([[ omega_guess  ]])
     omega_new = scipy.optimize.newton(residual_thrust_equal_drag, omega_guess[0][0], args=(Drag_iso[0],conditions,vehicle))
     vehicle.propulsors.prop_net.propeller.inputs.omega = np.array([[ omega_new ]])
     
