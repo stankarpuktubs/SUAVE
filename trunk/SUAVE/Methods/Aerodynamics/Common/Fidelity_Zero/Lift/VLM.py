@@ -224,4 +224,8 @@ def VLM(conditions,settings,geometry,initial_timestep_offset = 0):
     Velocity_Profile.V        = V_distribution 
     Velocity_Profile.dt       = dt 
     
-    return CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP ,Velocity_Profile
+    VLM_outputs = Data()
+    VLM_outputs.gamma = gamma
+    VLM_outputs.VD    = VD
+    
+    return CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP ,Velocity_Profile, VLM_outputs

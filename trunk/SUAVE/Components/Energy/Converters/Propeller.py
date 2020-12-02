@@ -17,6 +17,7 @@ from SUAVE.Methods.Geometry.Three_Dimensional \
 
 # package imports
 import numpy as np
+import scipy as sp
 
 # ----------------------------------------------------------------------
 #  Propeller Class
@@ -175,8 +176,8 @@ class Propeller(Energy_Component):
         pitch_c   = self.pitch_command
         theta     = self.thrust_angle 
         Na        = self.number_azimuthal_stations   
-        case      = self.case
-        rotation  = self.rotation 
+        case      = self.analysis_settings.case
+        rotation  = self.analysis_settings.rotation 
         use_BET   = self.use_Blade_Element_Theory 
         
         BB      = B*B    
@@ -241,7 +242,7 @@ class Propeller(Energy_Component):
         lambda_i     = ua/(omega*R)                                       # induced inflow ratio  (page 30 Leishman)  
     
         # azimuth distribution 
-        psi            = np.linspace(0,2*pi,Na+1)[:-1]
+        psi            = np.linspace(0,2*pi,Na) #np.linspace(0,2*pi,Na+1)[:-1]
         psi_2d         = np.tile(np.atleast_2d(psi).T,(1,Nr))
         psi_2d         = np.repeat(psi_2d[np.newaxis, :, :], ctrl_pts, axis=0)   
         azimuth_2d     = np.repeat(np.atleast_2d(psi).T[np.newaxis,: ,:], Nr, axis=0).T
@@ -299,25 +300,25 @@ class Propeller(Energy_Component):
                 # New points to interpolate data: (corresponding to r,phi locations on propeller disc)
                 points = np.array([[VD.YC[i], VD.ZC[i]] for i in range(len(VD.YC))])
                 #points = points[points[:,0]<0]
-                ycoords = np.reshape(R*chi*np.cos(psi_2d),(Na*Na,1))
-                zcoords = vehicle.propulsors.prop_net.propeller.prop_loc[2]  + np.reshape(R*chi*np.sin(psi_2d),(Na*Na,1))
+                ycoords = np.reshape(R*chi*np.cos(psi_2d),(Nr*Na,1))
+                zcoords = vehicle.propulsors.prop_net.propeller.prop_loc[2]  + np.reshape(R*chi*np.sin(psi_2d),(Nr*Na,1))
                 xi = np.array([[y_center[0]+ycoords[i][0],zcoords[i][0]] for i in range(len(ycoords))])
     
                 ua_w = sp.interpolate.griddata(points,ua_wing,xi,method='linear')
                 uv_w = sp.interpolate.griddata(points,uv_wing,xi,method='linear')
                 uw_w = sp.interpolate.griddata(points,uw_wing,xi,method='linear') 
     
-                ua_wing = np.reshape(ua_w,(Na,Na))
-                uw_wing = np.reshape(uw_w,(Na,Na))
-                uv_wing = np.reshape(uv_w,(Na,Na))
+                ua_wing = np.reshape(ua_w,(Na,Nr))
+                uw_wing = np.reshape(uw_w,(Na,Nr))
+                uv_wing = np.reshape(uv_w,(Na,Nr))
     
                 # Need to adjust uv_wing and uw_wing to match the proper orientation of the propeller rotation
                 if rotation == 'ccw':
-                    Vt_2d = omega_R_2d * (r_dim_2d  + mu_2d*np.sin(psi_2d)) + V_inf[:,0]*( -np.array(uw_wing)*np.cos(psi_2d) + np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
+                    Vt_2d = omega_R_2d * (chi_2d  + mu_2d*np.sin(psi_2d)) + V_inf[:,0]*( -np.array(uw_wing)*np.cos(psi_2d) + np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
                     Vr_2d = omega_R_2d * (mu_2d*np.cos(psi_2d)) +V_inf[:,0]*( - np.array(uw_wing)*np.sin(psi_2d)  - np.array(uv_wing)*np.cos(psi_2d)  ) #+ np.array(ut_wing)*np.cos(psi_2d))                                 # radial velocity , positive outward   eqn 6.35 pg 165                 
                     Va_2d = omega_R_2d * (lambda_2d) + V_inf[:,0]*np.array(ua_wing) # velocity perpendicular to the disk plane, positive downward  eqn 6.36 pg 166  
                 else:     
-                    Vt_2d = omega_R_2d * (r_dim_2d + mu_2d*np.sin(psi_2d)) + V_inf[:,0]*( np.array(uw_wing)*np.cos(psi_2d) - np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
+                    Vt_2d = omega_R_2d * (chi_2d + mu_2d*np.sin(psi_2d)) + V_inf[:,0]*( np.array(uw_wing)*np.cos(psi_2d) - np.array(uv_wing)*np.sin(psi_2d)  )  #+ np.array(ut_wing)*np.sin(psi_2d))                         # velocity tangential to the disk plane, positive toward the trailing edge eqn 6.34 pg 165           
                     Vr_2d = omega_R_2d * (mu_2d*np.cos(psi_2d)) +V_inf[:,0]*( - np.array(uw_wing)*np.sin(psi_2d)  - np.array(uv_wing)*np.cos(psi_2d)  ) #+ np.array(ut_wing)*np.cos(psi_2d))                                 # radial velocity , positive outward   eqn 6.35 pg 165                 
                     Va_2d = omega_R_2d * (lambda_2d) + V_inf[:,0]*np.array(ua_wing)  # velocity perpendicular to the disk plane, positive downward  eqn 6.36 pg 166                  
               

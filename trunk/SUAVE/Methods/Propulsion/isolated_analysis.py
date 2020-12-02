@@ -31,7 +31,7 @@ def isolated_analysis(vehicle, conditions, omega_guess = 2200*Units.rpm):
     conditions.aerodynamics.angle_of_attack = np.array([[ aoa_new ]])
     
     # Lift and Drag for Isolated wing:    
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_Profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
     CD_wing      = 0.012 + CDi_wing[0][0]   
     Drag_iso     = CD_wing*0.5*conditions.freestream.density*conditions.freestream.velocity**2*vehicle.reference_area 
     Lift_iso     = CL*0.5*conditions.freestream.density*conditions.freestream.velocity**2*vehicle.reference_area 
@@ -65,7 +65,7 @@ def residual_lift_equal_weight(aoa_guess, conditions, VLM_settings, vehicle):
     conditions.aerodynamics.angle_of_attack = np.array([[ aoa_guess ]])  
     
     # Analyze the wing:
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_Profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
     Lift = CL*0.5*conditions.freestream.density*conditions.freestream.velocity**2*vehicle.reference_area
     
     # Compute the residual:

@@ -22,10 +22,11 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     VLM_settings.use_surrogate                   = False
     VLM_settings.propeller_wake_model            = True   
     VLM_settings.wake_development_time           = 0.05
+    vehicle.propulsors.prop_net.propeller.analysis_settings.case = 'uniform_freestream'
      
     # Determine the isolated performance of the wing and propeller in a steady and level condition: 
     omega_guess = 1000*Units.rpm
-    iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions,omega_guess)
+    iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions,omega_guess) # shouldn't be here but doesn't work if its not
      
     # optimizaion  
     # bounds of variables
@@ -54,11 +55,9 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     F, Q, P, Cp , outputs , etap = vehicle.propulsors.prop_net.propeller.spin(conditions,vehicle)    
      
     # run VLM
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)   
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)   
 
-    # Determine the isolated performance of the wing and propeller in a steady and level condition:      
-    iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions)
-    
+
     results = Data()
     results.omega     = Omega
     results.etap      = etap[0][0]
@@ -176,7 +175,7 @@ def cruise_residual_lift_equal_weight(x, VLM_settings, conditions, vehicle):
     _, _, _, _ , _ , _ = vehicle.propulsors.prop_net.propeller.spin(conditions,vehicle)     
     
     # run VLM
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)  
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)  
     Lift = CL*0.5*(conditions.freestream.density*conditions.freestream.velocity**2)*vehicle.reference_area
     
     # Compute the residual:
@@ -201,7 +200,7 @@ def cruise_residual_thrust_equal_drag(x, VLM_settings, conditions, vehicle ):
     Thrust = vehicle.propulsors.prop_net.number_of_engines*F
     
     # run VLM
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
     Drag = (CDi  + 0.012)*0.5*(conditions.freestream.density*conditions.freestream.velocity**2)*vehicle.reference_area
     
     # compute residual 
@@ -235,7 +234,7 @@ def climb_residual_thrust_equal_drag(x, VLM_settings, conditions, vehicle ):
     Thrust = vehicle.propulsors.prop_net.number_of_engines*F
     
     # run VLM
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle) 
     Drag = (CDi  + 0.012)*0.5*(conditions.freestream.density*conditions.freestream.velocity**2)*vehicle.reference_area
     
     # compute residual 

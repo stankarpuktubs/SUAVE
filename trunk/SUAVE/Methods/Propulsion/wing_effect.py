@@ -28,8 +28,7 @@ def wing_effect(vehicle,conditions):
     prop_loc  = vehicle.propulsors.prop_net.propeller.prop_loc
     case      = vehicle.propulsors.prop_net.propeller.analysis_settings.case
     wake_type = vehicle.propulsors.prop_net.propeller.analysis_settings.wake_type
-    
-    N         = conditions.N    
+      
     aoa       = conditions.aerodynamics.angle_of_attack
     mach      = conditions.freestream.mach_number
     rho       = conditions.freestream.density
@@ -48,13 +47,16 @@ def wing_effect(vehicle,conditions):
     # --------------------------------------------------------------------------------
     vortices            = conditions.vortices
     VLM_settings        = Data()
-    VLM_settings.number_panels_spanwise   = vortices **2
-    VLM_settings.number_panels_chordwise  = vortices
-    VLM_settings.use_surrogate             = True
-    VLM_settings.include_slipstream_effect = False     
+    VLM_settings.number_spanwise_vortices   = vortices **2
+    VLM_settings.number_chordwise_vortices  = vortices
+    
+    VLM_settings.use_surrogate             = False
+    VLM_settings.include_slipstream_effect = False   
+    VLM_settings.propeller_wake_model      = False
+    VLM_settings.wake_development_time     = 0
     
 
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs   = VLM(conditions, VLM_settings, vehicle)
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_Profile, VLM_outputs   = VLM(conditions, VLM_settings, vehicle)
     VD       = copy.deepcopy(VLM_outputs.VD)
     gammaT   = VLM_outputs.gamma
     
@@ -82,9 +84,9 @@ def wing_effect(vehicle,conditions):
     
     # Need to parse it so there are only n_sw*n_cw*2  control points per evaluation of computing induced velocities:
     count  = 0
-    max_val_per_loop = 2*VLM_settings.number_panels_spanwise*VLM_settings.number_panels_chordwise
+    max_val_per_loop = 2*VLM_settings.number_spanwise_vortices*VLM_settings.number_chordwise_vortices
     num_loops_required = math.ceil(len(cp_XC)/(max_val_per_loop))
-    remainder = len(cp_XC)%(2*VLM_settings.number_panels_spanwise*VLM_settings.number_panels_chordwise)
+    remainder = len(cp_XC)%(2*VLM_settings.number_spanwise_vortices*VLM_settings.number_chordwise_vortices)
 
     u  = np.zeros_like(cp_YC)
     v  = np.zeros_like(cp_YC)
@@ -96,8 +98,7 @@ def wing_effect(vehicle,conditions):
         VD.ZC = cp_ZC[count:count+max_val_per_loop]   
         
         # Compute induced velocity for the given yz plane:
-        C_mn, DW_mn = compute_induced_velocity_matrix(VD,VLM_settings.number_panels_spanwise,VLM_settings.number_panels_chordwise,aoa,mach)   
-        MCM = VD.MCM      
+        C_mn, DW_mn = compute_wing_induced_velocity(VD,VLM_settings.number_spanwise_vortices,VLM_settings.number_chordwise_vortices,aoa,mach)      
     
       
         Va_deficit = np.zeros_like(VD.YC)
@@ -145,55 +146,33 @@ def wing_effect(vehicle,conditions):
                 #Apply BL axial velocity deficit due to turbulent BL at the TE of wing (using 1/7th power law)
                 W0 = Vv[0][0]/np.sqrt(4*np.pi*0.032*x_theta)
                 b = 2*theta_turb*np.sqrt(16*0.032*np.log(2)*x_theta)
-                #Va_deficit[abs(VD.ZC)<=delta_bl] = W0[abs(VD.ZC)<=delta_bl]*np.exp(-4*np.log(2)*(abs(VD.ZC[abs(VD.ZC)<=delta_bl])/b[abs(VD.ZC)<=delta_bl])**2)
                 Va_deficit[chord_distribution>0] = W0*np.exp(-4*np.log(2)*(abs(VD.ZC[chord_distribution>0])/b)**2)
-                        # Edge: Va_deficit[psi_i][r_i] = va_2d[0][psi_i][r_i]*(1-(y/delta_bl)**(1/7))#Vv[0][0]*(1-(y/delta_bl)**(1/7))
-                if len(Va_deficit[chord_distribution>0])>=1:
-                    
-                    astophere = 1
-                            
-            #va_2d = va_2d - Va_deficit#np.array(Va_deficit*(1-(prop_loc[0]-c_wing))**3)               
-            
-            ## Using the method from the bl paper:
-            #W0 = Vv[0][0]/np.sqrt(4*np.pi*0.032*x_theta)
-            #b = 2*theta_turb*np.sqrt(16*0.032*np.log(2)*x_theta)            
-            #Va_deficit[abs(VD.ZC)<=delta_bl] =W0*np.exp(-4*np.log(2)*(abs(VD.ZC)/b)**2)
-            
-            # If laminar:
-            #if Rex_te<5e5:
-                ###Flow is fully laminar
-                ##delta_bl = 5.2*(prop_loc[0])/np.sqrt(Rex_prop_plane)
-                ##for psi_i in range(len(va_2d[0])):
-                    ##for r_i in range(len(va_2d[0][0])):
-                        ##y = r_dim[r_i]*np.sin(psi[psi_i])
-                        ##if y<delta_bl: #within the boundary layer height and wing is in front of this location of propeller
-                            ###Apply BL axial velocity deficit due to laminar BL at the TE of wing
-                            ##Va_deficit[psi_i][r_i] = Vv[0][0]*(1-y*np.sqrt(Vv[0][0]/(nu*c_wing)))
-     
-        u[count:count+max_val_per_loop] = (C_mn[:,:,:,0]*MCM[:,:,:,0]@gammaT)[:,:,0] - Va_deficit/Vv[0][0]
-        v[count:count+max_val_per_loop] = (C_mn[:,:,:,1]*MCM[:,:,:,1]@gammaT)[:,:,0]
-        w[count:count+max_val_per_loop] = (C_mn[:,:,:,2]*MCM[:,:,:,2]@gammaT)[:,:,0]         
+
+
+        u[count:count+max_val_per_loop] = (C_mn[:,:,:,0]@gammaT[0])[0] - Va_deficit/Vv[0][0]
+        v[count:count+max_val_per_loop] = (C_mn[:,:,:,1]@gammaT[0])[0]
+        w[count:count+max_val_per_loop] = (C_mn[:,:,:,2]@gammaT[0])[0]         
         count = count +max_val_per_loop
     
     VD.XC = cp_XC
     VD.YC = cp_YC
     VD.ZC = cp_ZC
-    vehicle.propulsors.prop_net.propeller.disturbed_u = u #np.reshape(u,(2*VLM_settings.number_panels_spanwise,VLM_settings.number_panels_chordwise))
-    vehicle.propulsors.prop_net.propeller.disturbed_v = v #np.reshape(v,(2*VLM_settings.number_panels_spanwise,VLM_settings.number_panels_chordwise))
-    vehicle.propulsors.prop_net.propeller.disturbed_w = w #np.reshape(w,(2*VLM_settings.number_panels_spanwise,VLM_settings.number_panels_chordwise))
+    vehicle.propulsors.prop_net.propeller.disturbed_u = u 
+    vehicle.propulsors.prop_net.propeller.disturbed_v = v 
+    vehicle.propulsors.prop_net.propeller.disturbed_w = w 
 
     vehicle.VD = VD
     
-    # Visualization of the flow field behind the wing
-    import pylab as plt
-    fig  = plt.figure()
-    axes = fig.add_subplot(1,1,1)
-    a = axes.contourf(y_vals_full_wing/(0.5*vehicle.wings.main_wing.spans.projected),zlocs,np.reshape(w,(len(y_vals_full_wing),len(zlocs))).T)
-    axes.set_xlabel('y-location')
-    axes.set_ylabel("z-location")
-    axes.set_title("Downwash, w")
-    cbar = plt.colorbar(a,ax=axes)
-    #plt.legend()
+    ## Visualization of the flow field behind the wing
+    #import pylab as plt
+    #fig  = plt.figure()
+    #axes = fig.add_subplot(1,1,1)
+    #a = axes.contourf(y_vals_full_wing/(0.5*vehicle.wings.main_wing.spans.projected),zlocs,np.reshape(w,(len(y_vals_full_wing),len(zlocs))).T)
+    #axes.set_xlabel('y-location')
+    #axes.set_ylabel("z-location")
+    #axes.set_title("Downwash, w")
+    #cbar = plt.colorbar(a,ax=axes)
+    ##plt.legend()
     
     
     return vehicle
