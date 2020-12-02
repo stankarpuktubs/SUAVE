@@ -23,8 +23,11 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     VLM_settings.propeller_wake_model            = True   
     VLM_settings.wake_development_time           = 0.05
      
-    # Determine the isolated performance of the wing and propeller in a steady and level condition: 
-    omega_guess = 1000*Units.rpm
+    # Determine the isolated performance of the wing and propeller in a steady and level condition:
+    if Nprops > 10: 
+        omega_guess = 1750*Units.rpm 
+    else:
+        omega_guess = 1000*Units.rpm 
     iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions,omega_guess)
      
     # optimizaion  
@@ -67,7 +70,7 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     results.power     = P[0][0]
     results.CL        = CL[0][0]
     results.CDi       = (CDi  + 0.012)[0][0] 
-    results.etap_tot  = (1/sum(iso_results.power))*sum(iso_results.power*iso_results.etap_Iso)
+    results.etap_tot  = iso_results.etap_Iso
     results.L_to_D    = results.CL/results.CDi
     
     # save results in pickle file
@@ -100,7 +103,10 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
     for i in range(len(aoa_range)):
         
         # Determine the isolated performance of the wing and propeller in a steady and level condition:
-        omega_guess = 1000*Units.rpm 
+        if Nprops > 10: 
+            omega_guess = 1750*Units.rpm 
+        else:
+            omega_guess = 1000*Units.rpm     
         iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions,omega_guess)
         
         AoA = aoa_range[i]
@@ -138,7 +144,7 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
         results.power[i]     = P[0][0]
         results.CL[i]        = CL[0][0]
         results.CDi[i]       = (CDi  + 0.012)[0][0] 
-        results.etap_tot[i]  = (1/sum(iso_results.power))*sum(iso_results.power*iso_results.etap_Iso)
+        results.etap_tot[i]  = iso_results.etap_Iso
         results.L_to_D[i]    = results.CL[i]/results.CDi[i]
     
     # save results in pickle file
