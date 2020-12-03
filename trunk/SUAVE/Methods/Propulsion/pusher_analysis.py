@@ -21,7 +21,7 @@ def pusher_analysis(vehicle, conditions, ylocs,Drag_iso):
     
     # Set VLM settings to use surrogate instead of slipstream:
     VLM_settings                           = VLM_setup(conditions)
-    VLM_settings.use_surrogate             = True
+    VLM_settings.use_surrogate             = False
     VLM_settings.include_slipstream_effect = False    
     
     #-----------------------------------------------------------------------------------------
@@ -80,75 +80,61 @@ def VLM_setup(conditions):
     return VLM_settings   
 
 
+
 def plot_disks(vehicle,outputs):
-    psi   = outputs.azimuthal_distribution_2d[0,:,:]
-    r     = outputs.blade_radial_distribution_normalized_2d[0,:,:]  
+    # Setting Latex Font style
+    import matplotlib
+    font = {'family' : 'normal',
+               'weight' : 'normal',
+               'size'   : 22}
+    
+    matplotlib.rc('font', **font)
+    matplotlib.rcParams['mathtext.fontset'] = 'stix'
+    matplotlib.rcParams['font.family'] = 'STIXGeneral'
+    matplotlib.rc('lines', lw=3)
+    
+    # Now plotting:
+    psi   = outputs.disc_azimuthal_distribution[0,:,:] # outputs.azimuthal_distribution_2d[0,:,:] #
+    r     = outputs.disc_radial_distribution[0,:,:] #  outputs.blade_radial_distribution_normalized_2d[0,:,:] #
     
     # Adjust so that the hub is included in the plot:
     rh = vehicle.propulsors.prop_net.propeller.hub_radius
-        
-    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    CS_0 = axis0.contourf(psi, r, outputs.ut_wing,100,cmap=plt.cm.jet)    
-    cbar0 = plt.colorbar(CS_0, ax=axis0)
-    #cbar0 = plt.colorbar.ColorbarBase(CS_0,ax=axis0, norm=plt.colors.Normalize(vmin=-1,vmax=1),orientation='horizontal')
-    cbar0.ax.set_ylabel('$\dfrac{V_a-V_\infty}{V_\infty}$, m/s')
-    axis0.set_title('Downwash Velocity from Wing')
-    axis0.set_rorigin(-rh)
-    #cbar0 =matplotlib.pyplot.clim(-1,1)
-    # offset_radial_axis(ax) # Matplotlib < 2.2.3
-    #add_scale(axis0)    
-        
-    #fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    #CS_0 = axis0.contourf(psi, r, outputs.uv_wing,100,cmap=plt.cm.jet)    
-    #cbar0 = plt.colorbar(CS_0, ax=axis0)
-    #cbar0.ax.set_ylabel('$\dfrac{V_a-V_\infty}{V_\infty}$, m/s')
-    #axis0.set_title('Spanwise Velocity From Wing')
-    #axis0.set_rorigin(-rh)
     
     fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    CS_0 = axis0.contourf(psi, r, outputs.ua_wing,100,cmap=plt.cm.jet)    
-    cbar0 = plt.colorbar(CS_0, ax=axis0)
-    cbar0.ax.set_ylabel('$\dfrac{V_a-V_\infty}{V_\infty}$, m/s')
-    axis0.set_title('Axial Velocity From Wing')
+    CS_0 = axis0.contourf(psi, r, outputs.disc_axial_velocity[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet)  # (psi, r, outputs.axial_velocity_distribution_2d[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet)    #
+    cbar0 = plt.colorbar(CS_0, ax=axis0, format=matplotlib.ticker.FormatStrFormatter('%.2f'))
+    cbar0.ax.set_ylabel('$\dfrac{V_a}{V_\infty}$',rotation=0,labelpad=25)
+    axis0.set_title('Axial Velocity of Propeller',pad=15) 
+    thetaticks = np.arange(0,360,45)
+    axis0.set_thetagrids(thetaticks, frac=5.2)    
     axis0.set_rorigin(-rh)
-    #ax.set_xlim(right=7000)
-    
+    axis0.set_yticklabels([])
     
     fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    CS_0 = axis0.contourf(psi, r, outputs.axial_velocity_distribution_2d[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet)    
-    cbar0 = plt.colorbar(CS_0, ax=axis0)
-    cbar0.ax.set_ylabel('$\dfrac{V_a}{V_\infty}$, m/s')
-    axis0.set_title('Axial Velocity of Propeller') 
+    CS_0 = axis0.contourf(psi, r, outputs.disc_tangential_velocity[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet) #    (psi, r, outputs.tangential_velocity_distribution_2d[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet) #
+    cbar0 = plt.colorbar(CS_0, ax=axis0,format=matplotlib.ticker.FormatStrFormatter('%.2f'))
+    cbar0.ax.set_ylabel('$\dfrac{V_t}{V_\infty}$',rotation=0,labelpad=25)
+    axis0.set_title('Tangential Velocity of Propeller',pad=15)   
+    thetaticks = np.arange(0,360,45)
+    axis0.set_thetagrids(thetaticks, frac=2.0)    
     axis0.set_rorigin(-rh)
+    axis0.set_yticklabels([])
     
     fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    CS_0 = axis0.contourf(psi, r, outputs.tangential_velocity_distribution_2d[0]/outputs.velocity[0][0],100,cmap=plt.cm.jet)    
-    cbar0 = plt.colorbar(CS_0, ax=axis0)
-    cbar0.ax.set_ylabel('$\dfrac{V_t}{V_\infty}$, m/s')
-    axis0.set_title('Tangential Velocity of Propeller')   
+    CS_0 = axis0.contourf(psi, r, outputs.disc_thrust_distribution[0],100,cmap=plt.cm.jet) #(psi, r, outputs.thrust_distribution_2d[0],100,cmap=plt.cm.jet) ##,cmap=plt.cm.jet)    # -np.pi+psi turns it 
+    cbar0 = plt.colorbar(CS_0, ax=axis0, format=matplotlib.ticker.FormatStrFormatter('%.2f'))
+    cbar0.ax.set_ylabel('Thrust (N)',labelpad=25)
+    axis0.set_title('Thrust Distribution of Propeller',pad=15)  
     axis0.set_rorigin(-rh)
-    
-    #fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    #CS_0 = axis0.contourf(psi, r, outputs.radial_velocity_distribution_2d[0],100,cmap=plt.cm.jet)    
-    #cbar0 = plt.colorbar(CS_0, ax=axis0)
-    #cbar0.ax.set_ylabel('$\dfrac{V_r}{V_\infty}$, m/s')
-    #axis0.set_title('Radial Velocity of Propeller')
-    #axis0.set_rorigin(-rh)
+    axis0.set_yticklabels([])
     
     fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    CS_0 = axis0.contourf(psi, r, outputs.thrust_distribution_2d[0],100,cmap=plt.cm.jet)#,cmap=plt.cm.jet)    # -np.pi+psi turns it 
-    cbar0 = plt.colorbar(CS_0, ax=axis0)
-    cbar0.ax.set_ylabel('Thrust (N)')
-    axis0.set_title('Thrust Distribution of Propeller')  
+    CS_0 = axis0.contourf(psi, r, outputs.disc_torque_distribution[0],100,cmap=plt.cm.jet) #(psi, r, outputs.torque_distribution_2d[0],100,cmap=plt.cm.jet) ##,cmap=plt.cm.jet)    # -np.pi+psi turns it 
+    cbar0 = plt.colorbar(CS_0, ax=axis0, format=matplotlib.ticker.FormatStrFormatter('%.2f'))
+    cbar0.ax.set_ylabel('Torque (Nm)',labelpad=25)
+    axis0.set_title('Torque Distribution of Propeller',pad=15) 
     axis0.set_rorigin(-rh)
-
-    
-    fig0, axis0 = plt.subplots(subplot_kw=dict(projection='polar'))
-    CS_0 = axis0.contourf(psi, r, outputs.torque_distribution_2d[0],100,cmap=plt.cm.jet)#,cmap=plt.cm.jet)    # -np.pi+psi turns it 
-    cbar0 = plt.colorbar(CS_0, ax=axis0)
-    cbar0.ax.set_ylabel('Torque (Nm)')
-    axis0.set_title('Torque Distribution of Propeller') 
-    axis0.set_rorigin(-rh)
+    axis0.set_yticklabels([])
     
     plt.show()
     return
