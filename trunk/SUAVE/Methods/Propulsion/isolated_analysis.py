@@ -14,7 +14,7 @@ import numpy as np
 from SUAVE.Core import Units, Data
 from SUAVE.Methods.Aerodynamics.Common.Fidelity_Zero.Lift.VLM import VLM
  
-def isolated_analysis(vehicle, conditions, omega_guess = 2200*Units.rpm):
+def isolated_analysis(vehicle, conditions, omega_guess = 1500*Units.rpm):
     #------------------------------------------------------------
     # Change analysis setting case to be uniform freestream:
     #------------------------------------------------------------

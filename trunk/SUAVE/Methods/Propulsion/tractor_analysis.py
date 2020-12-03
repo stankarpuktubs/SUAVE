@@ -30,6 +30,8 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
         omega_guess = 1750*Units.rpm
     else:
         omega_guess = 1000*Units.rpm
+    
+    # Run the propeller, outputs are used in the generation of propeller wake within the optimization:
     iso_results, Drag_iso, aoa_iso, omega_iso = isolated_analysis(vehicle, conditions,omega_guess)
 
 
@@ -61,7 +63,6 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
 
     # run VLM
     CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)
-
 
     results = Data()
     results.omega     = Omega

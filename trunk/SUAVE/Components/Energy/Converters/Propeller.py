@@ -177,13 +177,13 @@ class Propeller(Energy_Component):
         theta     = self.thrust_angle 
         Na        = self.number_azimuthal_stations   
         case      = self.analysis_settings.case
-        rotation  = self.analysis_settings.rotation 
         use_BET   = self.use_Blade_Element_Theory 
         
         BB      = B*B    
         BBB     = BB*B 
         
         if case == 'disturbed_freestream':
+            rotation  = self.analysis_settings.rotation 
             ua_wing = self.disturbed_u
             uv_wing = self.disturbed_v
             uw_wing = self.disturbed_w 

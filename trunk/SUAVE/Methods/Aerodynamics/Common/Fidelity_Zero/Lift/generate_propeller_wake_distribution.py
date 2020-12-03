@@ -146,7 +146,7 @@ def generate_propeller_wake_distribution(prop,thrust_angle,m,VD,init_timestep_of
 
     for i in range(num_prop): 
 
-        if (prop.rotation != None) and (prop.rotation[i] == 1):        
+        if any(prop.rotation != None) and (prop.rotation[i] == 1):        
             total_angle_offset = -total_angle_offset    
 
         azi_y   = np.sin(blade_angle_loc + total_angle_offset)  
@@ -174,7 +174,7 @@ def generate_propeller_wake_distribution(prop,thrust_angle,m,VD,init_timestep_of
 
         # Store points  
         # ( control point,  prop ,  time step , blade number , location on blade )
-        if (prop.rotation != None) and (prop.rotation[i] == -1):  
+        if any(prop.rotation != None) and (prop.rotation[i] == -1):  
             WD_XA1[:,i,:,:,:] = X_pts[: , :-1 , : , :-1 ]
             WD_YA1[:,i,:,:,:] = Y_pts[: , :-1 , : , :-1 ]
             WD_ZA1[:,i,:,:,:] = Z_pts[: , :-1 , : , :-1 ]
