@@ -53,7 +53,7 @@ def isolated_analysis(vehicle, conditions, omega_guess = 1500*Units.rpm):
     iso_results.power     = P[0][0]
     iso_results.etap_Iso  = etap[0][0]
     iso_results.CL_iso    = CL[0][0]
-    iso_results.CD_iso    = CD_wing
+    iso_results.CD_iso    = CDi + 0.012#CD_wing
     iso_results.J         = conditions.freestream.velocity/((2/(2*np.pi))*omega_new*vehicle.propulsors.prop_net.propeller.tip_radius*2)        
     
     return iso_results, Drag_iso, aoa_new, omega_new

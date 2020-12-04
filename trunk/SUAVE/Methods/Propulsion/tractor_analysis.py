@@ -148,6 +148,7 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
         results.CDi[i]       = (CDi  + 0.012)[0][0]
         results.etap_tot[i]  = iso_results.etap_Iso
         results.L_to_D[i]    = results.CL[i]/results.CDi[i]
+        results.iso_CDi      = iso_results.CD_iso
 
     # save results in pickle file
     filename = 'Tractor_Climb_Res_' + str(Nprops) + '_Props'
