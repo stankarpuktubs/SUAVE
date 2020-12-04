@@ -17,7 +17,7 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
 
     # create data structure
     VLM_settings                                 = Data()
-    VLM_settings.number_spanwise_vortices        = 25
+    VLM_settings.number_spanwise_vortices        = 30
     VLM_settings.number_chordwise_vortices       = 5
     VLM_settings.use_surrogate                   = False
     VLM_settings.propeller_wake_model            = True
@@ -62,7 +62,7 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     F, Q, P, Cp , outputs , etap = vehicle.propulsors.prop_net.propeller.spin(conditions,vehicle)
 
     # run VLM
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle,initial_timestep_offset = 0.0)
 
     results = Data()
     results.omega     = Omega
@@ -70,8 +70,10 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     results.Q         = Q[0][0]
     results.AoA       = AoA
     results.power     = P[0][0]
-    results.CL        = CL[0][0]
-    results.CDi       = (CDi  + 0.012)[0][0]
+    results.CL        = CL[0][0] 
+    results.cl_y      = cl_y[0][0] 
+    results.cl_y      = np.concatenate([np.flip(cl_y[0][0:int(len(cl_y[0])/2)]),cl_y[0][int(len(cl_y[0])/2):]])          
+    results.CDi       = (CDi[0][0]  + 0.012) 
     results.etap_tot  = iso_results.etap_Iso
     results.L_to_D    = results.CL/results.CDi
 
@@ -85,7 +87,7 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
 
     # create data structure
     VLM_settings                           = Data()
-    VLM_settings.number_spanwise_vortices  = 25
+    VLM_settings.number_spanwise_vortices  = 30
     VLM_settings.number_chordwise_vortices = 5
     VLM_settings.use_surrogate             = False
     VLM_settings.propeller_wake_model      = True
@@ -98,6 +100,7 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
     results.AoA       = np.zeros(len(aoa_range))
     results.power     = np.zeros(len(aoa_range))
     results.CL        = np.zeros(len(aoa_range))
+    results.cl_y      = np.zeros((len(aoa_range),30*2))
     results.CDi       = np.zeros(len(aoa_range))
     results.etap_tot  = np.zeros(len(aoa_range))
     results.L_to_D    = np.zeros(len(aoa_range))
@@ -137,15 +140,18 @@ def tractor_climb_optimization(vehicle, conditions,Nprops,aoa_range ):
         F, Q, P, Cp , outputs , etap = vehicle.propulsors.prop_net.propeller.spin(conditions,vehicle)
 
         # run VLM
-        CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)
+        CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)
 
         results.omega[i]     = Omega
         results.etap[i]      = etap[0][0]
         results.Q[i]         = Q[0][0]
         results.AoA[i]       = AoA
         results.power[i]     = P[0][0]
-        results.CL[i]        = CL[0][0]
-        results.CDi[i]       = (CDi  + 0.012)[0][0]
+        results.CL[i]        = CL[0][0] 
+        a                    = np.concatenate([np.flip(cl_y[0][0:int(len(cl_y[0])/2)]),cl_y[0][int(len(cl_y[0])/2):]])
+        results.cl_y[i,:]    = a         
+        results.cl_y[i,:]    = cl_y[0] 
+        results.CDi[i]       = (CDi  + 0.012)[0][0]  
         results.etap_tot[i]  = iso_results.etap_Iso
         results.L_to_D[i]    = results.CL[i]/results.CDi[i]
         results.iso_CDi      = iso_results.CD_iso
@@ -185,7 +191,7 @@ def cruise_residual_lift_equal_weight(x, VLM_settings, conditions, vehicle):
     _, _, _, _ , _ , _ = vehicle.propulsors.prop_net.propeller.spin(conditions,vehicle)
 
     # run VLM
-    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle)
+    CL, CDi, CM, CL_wing, CDi_wing, cl_y , cdi_y , CP, Velocity_profile, VLM_outputs  = VLM(conditions, VLM_settings, vehicle,initial_timestep_offset = 0.0)
     Lift = CL*0.5*(conditions.freestream.density*conditions.freestream.velocity**2)*vehicle.reference_area
 
     # Compute the residual:
