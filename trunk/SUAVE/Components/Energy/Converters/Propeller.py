@@ -208,7 +208,7 @@ class Propeller(Energy_Component):
         
         # Now just use the aligned velocity
         V        = V_thrust[:,0,None] 
-        ua       = np.zeros_like(V)              
+        ua       = np.ones_like(V)*self.induced_hover_velocity*2      
         ut       = np.zeros_like(V) 
     
         #Things that don't change with iteration
@@ -285,7 +285,7 @@ class Propeller(Energy_Component):
     
             # motification to initial radial inflow distribution  
             lambda_i_2d = lambda_i_2d*(1 + kx_2d*r_dim_2d*np.cos(psi_2d) + ky_2d*r_dim_2d*np.sin(psi_2d) )  # eqn 5.41 (page 136 Leishman)  
-            lambda_2d   = lambda_c_2d + lambda_i_2d
+            lambda_2d   = lambda_c_2d - lambda_i_2d
             
             # axial, tangential and radial components of local blade flow [multiplied by omega*R to dimensionalize] 
             omega_R_2d  = np.tile(np.atleast_2d(omega*R),(1,Nr))
@@ -344,7 +344,7 @@ class Propeller(Energy_Component):
             nu_2d       = np.tile(np.atleast_2d(nu),(1,Nr))
             nu_2d       = np.repeat(nu_2d[:, np.newaxis,  :], Na, axis=1)    
             
-            Re    = (U_2d*chord_2d)/nu_2d  
+            Re         = (U_2d*chord_2d)/nu_2d  
              
             # local mach number
             Ma         = (U_2d)/a_2d    
@@ -373,9 +373,9 @@ class Propeller(Energy_Component):
             dD     = 0.5 * rho_2d * U_2d**2 * chord_2d * Cd # eqn 6.38 (page 167 Leishman) 
     
             # application of tip loss factor 
-            tip_loss_factor          = 0.97 # (page 67 and  Leishman) make a property of the rotor
-            dL[r_dim_2d>tip_loss_factor] = 0    # (page 63 & 90 and  Leishman) 
-    
+            tip_loss_factor            = 0.97 # (page 67 and  Leishman) make a property of the rotor
+            dL[chi_2d>tip_loss_factor] = 0    # (page 63 & 90 and  Leishman) 
+            
             # normal and tangential forces  
             dFz  =dL*np.cos(phi_2d) - dD*np.sin(phi_2d) # eqn 6.39 (page 167 Leishman) 
             dFx  =dL*np.sin(phi_2d) - dD*np.cos(phi_2d) # eqn 6.40 (page 167 Leishman)
@@ -535,9 +535,9 @@ class Propeller(Energy_Component):
         Cq[Cq<0]                                           = 0.  
         Ct[Ct<0]                                           = 0.  
         Cp[Cp<0]                                           = 0.  
-        thrust[conditions.propulsion.throttle[:,0] <=0.0]  = 0.0
-        power[conditions.propulsion.throttle[:,0]  <=0.0]  = 0.0 
-        torque[conditions.propulsion.throttle[:,0]  <=0.0] = 0.0
+        thrust[conditions.propulsion.throttle[:,0]<=0.0]   = 0.0
+        power[conditions.propulsion.throttle[:,0]<=0.0]    = 0.0 
+        torque[conditions.propulsion.throttle[:,0]<=0.0]   = 0.0
         thrust[omega<0.0]                                  = - thrust[omega<0.0]  
         thrust[omega==0.0]                                 = 0.0
         power[omega==0.0]                                  = 0.0

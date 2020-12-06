@@ -48,7 +48,7 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
 
     bnds  = ((aoa_lb,aoa_ub), (omega_lb , omega_ub))
     tolerance  = 1e-3
-    sol   = minimize(cruise_objective, [ 6. * Units.degrees , 600 * Units.rpm], args  = (VLM_settings, conditions, vehicle) , method='SLSQP', bounds=bnds, tol= tolerance, constraints=cons)
+    sol   = minimize(cruise_objective, [ 4. * Units.degrees , 600 * Units.rpm], args  = (VLM_settings, conditions, vehicle) , method='SLSQP', bounds=bnds, tol= tolerance, constraints=cons)
 
     # optimized values
     AoA   = sol.x[0]
@@ -76,7 +76,8 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     results.CDi       = (CDi[0][0]  + 0.012) 
     results.etap_tot  = iso_results.etap_Iso
     results.L_to_D    = results.CL/results.CDi
-
+    
+    print( (results.L_to_D*results.etap - (iso_results.CL_iso/iso_results.CD_iso)*iso_results.etap_Iso)*100/((iso_results.CL_iso/iso_results.CD_iso)*iso_results.etap_Iso))
     # save results in pickle file
     filename = 'Tractor_Cruise_Res_' + str(Nprops) + '_Props'
     save_results(results,filename)
