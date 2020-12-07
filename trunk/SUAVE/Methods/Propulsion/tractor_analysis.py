@@ -21,7 +21,7 @@ def tractor_cruise_optimization(vehicle, conditions,Nprops ):
     VLM_settings.number_chordwise_vortices       = 5
     VLM_settings.use_surrogate                   = False
     VLM_settings.propeller_wake_model            = True
-    VLM_settings.wake_development_time           = 0.015
+    VLM_settings.wake_development_time           = 0.025
     vehicle.propulsors.prop_net.propeller.analysis_settings.case = 'uniform_freestream'
 
 
